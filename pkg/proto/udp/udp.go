@@ -160,16 +160,10 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 			return
 		}
 		// buf[:n] will be encoded to string, so the bytes can be reused
-		udpMsg := NewUDPPacket(buf[:n], nil, remoteAddr)
-		xl.Warn("[udp ReadFromUDP] udpMsg:%v addr:%v count:%v\n", udpMsg, remoteAddr, n)
-		bufMsg, err := GetContent(udpMsg)
-		if err != nil {
-			continue
-		}
-		xl.Warn("[udp ReadFromUDP] bufMsg:%v addr:%v count:%v\n", bufMsg, remoteAddr, n)
+		xl.Info("[udp ReadFromUDP] buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
 
 		var data msg.Message
-		if err := json.Unmarshal(bufMsg, &data); err != nil {
+		if err := json.Unmarshal(buf[:n], &data); err != nil {
 			xl.Error("Error unmarshaling JSON: %v\n", err)
 			continue
 		}

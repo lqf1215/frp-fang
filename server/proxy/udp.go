@@ -132,11 +132,11 @@ func (pxy *UDPProxy) Run() (remoteAddr string, err error) {
 			}
 			switch m := rawMsg.(type) {
 			case *msg.Ping:
-				xl.Trace("udp work conn get ping message")
+				xl.Warn("udp work conn get ping message")
 				continue
 			case *msg.UDPPacket:
 				if errRet := errors.PanicToError(func() {
-					xl.Trace("get udp message from workConn: %s", m.Content)
+					xl.Warn("get udp message from workConn: %s", m.Content)
 					pxy.readCh <- m
 					metrics.Server.AddTrafficOut(
 						pxy.GetName(),
@@ -167,7 +167,7 @@ func (pxy *UDPProxy) Run() (remoteAddr string, err error) {
 					conn.Close()
 					return
 				}
-				xl.Trace("send message to udp workConn: %s", udpMsg.Content)
+				xl.Warn("send message to udp workConn: %s", udpMsg.Content)
 				metrics.Server.AddTrafficIn(
 					pxy.GetName(),
 					pxy.GetConfigurer().GetBaseConfig().Type,
