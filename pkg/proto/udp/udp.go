@@ -162,7 +162,7 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 			continue
 		}
 
-		xl.Warn("[udp ReadFromUDP] addr=%s, n=%d, err=%v", addr, n, string(buffer[:n]))
+		xl.Warn("[udp ReadFromUDP] data:%v addr:%v count:%v\n", string(buffer[:n]), addr, n)
 		var data msg.Message
 		if err := json.Unmarshal(buffer[:n], &data); err != nil {
 			xl.Error("Error unmarshaling JSON: %v\n", err)
