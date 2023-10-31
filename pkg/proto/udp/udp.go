@@ -152,9 +152,8 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 		return
 	}
 
-	buf := pool.GetBuf(1500)
-	defer pool.PutBuf(buf)
 	for {
+		buf := make([]byte, 1024)
 		n, remoteAddr, err := conn.ReadFromUDP(buf)
 		if err != nil {
 			return
@@ -182,6 +181,9 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 
 func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
 	err := msg.WriteMsg(conn, &message)
+	if err != nil {
+		log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
+	}
 	marshal, err := json.Marshal(&message)
 	if err != nil {
 		return 0, err

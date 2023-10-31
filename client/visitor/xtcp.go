@@ -180,13 +180,13 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 	}
 	tunnelConn, err := sv.openTunnel(ctx)
 	if err != nil {
-		xl.Error("open tunnel error: %v", err)
+		xl.Error("visitor xtcp] open tunnel error: %v", err)
 		// no fallback, just return
 		if sv.cfg.FallbackTo == "" {
 			return
 		}
 
-		xl.Debug("try to transfer connection to visitor: %s", sv.cfg.FallbackTo)
+		xl.Error("visitor xtcp] try to transfer connection to visitor: %s", sv.cfg.FallbackTo)
 		if err := sv.helper.TransferConn(sv.cfg.FallbackTo, userConn); err != nil {
 			xl.Error("transfer connection to visitor %s error: %v", sv.cfg.FallbackTo, err)
 			return
@@ -203,6 +203,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 			return
 		}
 	}
+	xl.Warn("[visitor] handleConn UseEncryption =[%+v] UseCompression=%v  RemoteAddr=%v", sv.cfg.Transport.UseEncryption, sv.cfg.Transport.UseEncryption, tunnelConn.RemoteAddr().String())
 	if sv.cfg.Transport.UseCompression {
 		var recycleFn func()
 		muxConnRWCloser, recycleFn = libio.WithCompressionFromPool(muxConnRWCloser)
@@ -210,9 +211,9 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 	}
 
 	_, _, errs := libio.Join(userConn, muxConnRWCloser)
-	xl.Error("join connections closed")
+	xl.Warn("join connections closed")
 	if len(errs) > 0 {
-		xl.Trace("join connections errors: %v", errs)
+		xl.Error("join connections errors: %v", errs)
 	}
 }
 
@@ -430,7 +431,7 @@ func NewQUICTunnelSession(clientCfg *v1.ClientCommonConfig) TunnelSession {
 }
 
 func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
-	log.Warn("[visitor xtcp] QUICTunnelSession Init: %v", listenConn.LocalAddr().String())
+	log.Warn("[visitor xtcp] QUICTunnelSession Init: %v raddr=%v", listenConn.LocalAddr().String(), raddr.String())
 	tlsConfig, err := transport.NewClientTLSConfig("", "", "", raddr.String())
 	if err != nil {
 		return fmt.Errorf("create tls config error: %v", err)
