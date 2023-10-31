@@ -17,6 +17,7 @@ package udp
 import (
 	"context"
 	"encoding/base64"
+	"github.com/fatedier/frp/pkg/nathole"
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/fatedier/frp/pkg/util/xlog"
 	"net"
@@ -187,8 +188,8 @@ func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) 
 	//if err != nil {
 	//	return 0, err
 	//}
-	b := []byte("CONNECTED-MODE SOCKET")
-	n, err := conn.WriteToUDP(b, raddr)
+	buf, err := nathole.EncodeMessage(message, []byte("abcdefg"))
+	n, err := conn.WriteToUDP(buf, raddr)
 
 	if err != nil {
 		return 0, err
