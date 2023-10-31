@@ -17,6 +17,7 @@ package nathole
 import (
 	"bytes"
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"net"
 	"strconv"
 
@@ -46,6 +47,28 @@ func DecodeMessageInto(data, key []byte, m msg.Message) error {
 	}
 
 	return msg.ReadMsgInto(bytes.NewReader(buf), m)
+}
+
+func EncodeBytes(buffer, key []byte) ([]byte, error) {
+
+	buf, err := crypto.Encode(buffer, key)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
+func DecodeBytes(data, key []byte, m msg.Message) ([]byte, error) {
+	buf, err := crypto.Decode(data, key)
+	if err != nil {
+		return nil, err
+	}
+	log.Warn("DecodeBytes: %v", string(buf))
+	err = msg.ReadMsgInto(bytes.NewReader(buf), m)
+	if err != nil {
+		log.Error("DecodeBytes error: %v", err)
+	}
+	return buf, nil
 }
 
 type ChangedAddress struct {
