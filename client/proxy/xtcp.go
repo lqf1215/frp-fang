@@ -120,10 +120,12 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	// default is quic
 	pxy.listenByQUIC(listenConn, raddr, startWorkConnMsg)
 	xl.Warn("[proxy xtcp] xtcp listen by quic end")
+
 }
 
 func (pxy *XTCPProxy) listenByKCP(listenConn *net.UDPConn, raddr *net.UDPAddr, startWorkConnMsg *msg.StartWorkConn) {
 	xl := pxy.xl
+	xl.Warn("[proxy xtcp] xtcp listen by kcp listenByKCP start LocalAddr [%s]", listenConn.LocalAddr().String())
 	listenConn.Close()
 	laddr, _ := net.ResolveUDPAddr("udp", listenConn.LocalAddr().String())
 	lConn, err := net.DialUDP("udp", laddr, raddr)
@@ -156,7 +158,9 @@ func (pxy *XTCPProxy) listenByKCP(listenConn *net.UDPConn, raddr *net.UDPAddr, s
 			xl.Error("accept connection error: %v", err)
 			return
 		}
+		xl.Warn("[proxy xtcp] xtcp listen by kcp HandleTCPWorkConnection start")
 		go pxy.HandleTCPWorkConnection(muxConn, startWorkConnMsg, []byte(pxy.cfg.Secretkey))
+		xl.Warn("[proxy xtcp] xtcp listen by kcp HandleTCPWorkConnection end")
 	}
 }
 
@@ -169,6 +173,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Warn("create tls config error: %v", err)
 		return
 	}
+	xl.Warn("[proxy xtcp] xtcp listen by quic listenByQUIC start LocalAddr [%s]", listenConn.LocalAddr().String())
 	tlsConfig.NextProtos = []string{"frp"}
 	quicListener, err := quic.Listen(listenConn, tlsConfig,
 		&quic.Config{
@@ -194,6 +199,8 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 			_ = c.CloseWithError(0, "")
 			return
 		}
+		xl.Warn("[proxy xtcp] xtcp listen by kcp listenByQUIC start")
 		go pxy.HandleTCPWorkConnection(utilnet.QuicStreamToNetConn(stream, c), startWorkConnMsg, []byte(pxy.cfg.Secretkey))
+		xl.Warn("[proxy xtcp] xtcp listen by kcp listenByQUIC end")
 	}
 }

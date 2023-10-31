@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
 	"strconv"
@@ -166,7 +167,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 		}
 	}()
 
-	xl.Error("[visitor xtcp] get a new xtcp user connection")
+	xl.Error("[visitor xtcp] get a new xtcp user connection userConn=%v - %v", userConn.LocalAddr().String(), userConn.RemoteAddr().String())
 
 	// Open a tunnel connection to the server. If there is already a successful hole-punching connection,
 	// it will be reused. Otherwise, it will block and wait for a successful hole-punching connection until timeout.
@@ -192,7 +193,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 		isConnTrasfered = true
 		return
 	}
-	xl.Warn("[visitor] handleConn tunnelConn cfg=[%+v]", sv.cfg)
+	xl.Warn("[visitor] handleConn tunnelConn cfg=[%+v] tunnelConn=%v  RemoteAddr=%v", sv.cfg, tunnelConn.LocalAddr().String(), tunnelConn.RemoteAddr().String())
 	var muxConnRWCloser io.ReadWriteCloser = tunnelConn
 	if sv.cfg.Transport.UseEncryption {
 		muxConnRWCloser, err = libio.WithEncryption(muxConnRWCloser, []byte(sv.cfg.SecretKey))
@@ -326,6 +327,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 		xl.Warn("[visitor xtcp] init tunnel session error: %v", err)
 		return
 	}
+	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end")
 }
 
 type TunnelSession interface {
@@ -345,11 +347,10 @@ func NewKCPTunnelSession() TunnelSession {
 }
 
 func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
-
 	listenConn.Close()
 	laddr, _ := net.ResolveUDPAddr("udp", listenConn.LocalAddr().String())
 	lConn, err := net.DialUDP("udp", laddr, raddr)
-	fmt.Sprintf("[visitor xtcp] laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr().String())
+	log.Warn("[visitor xtcp] laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr().String())
 	if err != nil {
 		return fmt.Errorf("dial udp error: %v", err)
 	}
@@ -367,7 +368,7 @@ func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) er
 		remote.Close()
 		return fmt.Errorf("initial client session error: %v", err)
 	}
-	fmt.Sprintf("[visitor xtcp] session: %v", session)
+	log.Warn("[visitor xtcp] session: %v", session)
 	ks.mu.Lock()
 	ks.session = session
 	ks.lConn = lConn

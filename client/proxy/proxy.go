@@ -132,7 +132,7 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 		})
 	}
 
-	xl.Trace("handle tcp work connection, use_encryption: %t, use_compression: %t",
+	xl.Warn("[proxy] handle tcp work connection, use_encryption: %t, use_compression: %t",
 		baseCfg.Transport.UseEncryption, baseCfg.Transport.UseCompression)
 	if baseCfg.Transport.UseEncryption {
 		remote, err = libio.WithEncryption(remote, encKey)
@@ -180,9 +180,9 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 
 	if pxy.proxyPlugin != nil {
 		// if plugin is set, let plugin handle connection first
-		xl.Debug("handle by plugin: %s", pxy.proxyPlugin.Name())
+		xl.Debug("[proxy] handle by plugin: %s", pxy.proxyPlugin.Name())
 		pxy.proxyPlugin.Handle(remote, workConn, &extraInfo)
-		xl.Debug("handle by plugin finished")
+		xl.Debug("[proxy] handle by plugin finished")
 		return
 	}
 
@@ -190,13 +190,14 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 		net.JoinHostPort(baseCfg.LocalIP, strconv.Itoa(baseCfg.LocalPort)),
 		libdial.WithTimeout(10*time.Second),
 	)
+	xl.Warn("[proxy] connect to local service [%s:%d]", baseCfg.LocalIP, baseCfg.LocalPort)
 	if err != nil {
 		workConn.Close()
-		xl.Error("connect to local service [%s:%d] error: %v", baseCfg.LocalIP, baseCfg.LocalPort, err)
+		xl.Error("[proxy] connect to local service [%s:%d] error: %v", baseCfg.LocalIP, baseCfg.LocalPort, err)
 		return
 	}
 
-	xl.Debug("join connections, localConn(l[%s] r[%s]) workConn(l[%s] r[%s])", localConn.LocalAddr().String(),
+	xl.Error("[proxy] join connections, localConn(l[%s] r[%s]) workConn(l[%s] r[%s])", localConn.LocalAddr().String(),
 		localConn.RemoteAddr().String(), workConn.LocalAddr().String(), workConn.RemoteAddr().String())
 
 	if extraInfo.ProxyProtocolHeader != nil {
@@ -208,9 +209,9 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 	}
 
 	_, _, errs := libio.Join(localConn, remote)
-	xl.Debug("join connections closed")
+	xl.Debug("[proxy] join connections closed")
 	if len(errs) > 0 {
-		xl.Trace("join connections errors: %v", errs)
+		xl.Trace("[proxy] join connections errors: %v", errs)
 	}
 	if compressionResourceRecycleFn != nil {
 		compressionResourceRecycleFn()
