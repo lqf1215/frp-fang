@@ -16,6 +16,8 @@ package udp
 
 import (
 	"encoding/base64"
+	"encoding/json"
+	"github.com/fatedier/frp/pkg/util/log"
 	"net"
 	"sync"
 	"time"
@@ -132,4 +134,54 @@ func Forwarder(dstAddr *net.UDPAddr, readCh <-chan *msg.UDPPacket, sendCh chan<-
 			}
 		}
 	}()
+}
+
+type UDPServer struct {
+	conn   *net.UDPConn
+	buffer []byte
+}
+
+func ReadFromUDP(conn *net.UDPConn) {
+	log.Warn("[udp ReadFromUDP]start")
+	var buffer []byte
+	for {
+		n, addr, err := conn.ReadFromUDP(buffer)
+		if err != nil {
+			log.Error("[udp ReadFromUDP]Error reading from UDP connection: %v\n", err)
+			continue
+		}
+
+		log.Warn("[udp ReadFromUDP] addr=%s, n=%d, err=%v", addr, n)
+		var data msg.Message
+		if err := json.Unmarshal(buffer[:n], &data); err != nil {
+			log.Error("Error unmarshaling JSON: %v\n", err)
+			continue
+		}
+		switch data.(type) {
+		case msg.P2pMessageVisitor:
+			log.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", addr, data)
+		case msg.P2pMessageProxy:
+			log.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", addr, data)
+		default:
+			log.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", addr, data)
+		}
+
+	}
+}
+
+func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
+	//err := msg.WriteMsg(conn, &message)
+	marshal, err := json.Marshal(&message)
+	if err != nil {
+		return 0, err
+	}
+	n, err := conn.WriteToUDP(marshal, raddr)
+
+	if err != nil {
+		return 0, err
+	}
+
+	log.Warn("[udp SendUdpMessage] n=%d, raddr=%v", n, raddr.String())
+
+	return n, nil
 }

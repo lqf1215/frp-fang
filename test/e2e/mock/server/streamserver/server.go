@@ -3,6 +3,7 @@ package streamserver
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
 	"strconv"
@@ -98,6 +99,7 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) initListener() (err error) {
+	log.Warn("init listener")
 	switch s.netType {
 	case TCP:
 		s.l, err = net.Listen("tcp", net.JoinHostPort(s.bindAddr, strconv.Itoa(s.bindPort)))

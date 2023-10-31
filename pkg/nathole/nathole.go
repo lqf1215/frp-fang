@@ -17,6 +17,7 @@ package nathole
 import (
 	"context"
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"math/rand"
 	"net"
 	"strconv"
@@ -110,6 +111,7 @@ func PreCheck(
 // Prepare is used to do some preparation work before penetration.
 func Prepare(stunServers []string) (*PrepareResult, error) {
 	// discover for Nat type
+	log.Warn("[nathole] Prepare Discovering NAT type...stunServers=[%v]", stunServers)
 	addrs, localAddr, err := Discover(stunServers, "")
 	if err != nil {
 		return nil, fmt.Errorf("discover error: %v", err)

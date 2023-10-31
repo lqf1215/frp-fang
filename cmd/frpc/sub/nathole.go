@@ -16,6 +16,7 @@ package sub
 
 import (
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -63,11 +64,12 @@ var natholeDiscoveryCmd = &cobra.Command{
 
 		addrs, localAddr, err := nathole.Discover([]string{cfg.NatHoleSTUNServer}, natHoleLocalAddr)
 		if err != nil {
-			fmt.Println("discover error:", err)
+			log.Warn("discover error:", err)
 			os.Exit(1)
 		}
+		log.Warn("[nathole] NatHoleSTUNServer=[%+v] [%+v] addrs[%+v] localAddr[%+v]", cfg.NatHoleSTUNServer, natHoleLocalAddr, addrs, localAddr)
 		if len(addrs) < 2 {
-			fmt.Printf("discover error: can not get enough addresses, need 2, got: %v\n", addrs)
+			log.Warn("discover error: can not get enough addresses, need 2, got: %v\n", addrs)
 			os.Exit(1)
 		}
 
@@ -75,15 +77,15 @@ var natholeDiscoveryCmd = &cobra.Command{
 
 		natFeature, err := nathole.ClassifyNATFeature(addrs, localIPs)
 		if err != nil {
-			fmt.Println("classify nat feature error:", err)
+			log.Warn("classify nat feature error:", err)
 			os.Exit(1)
 		}
-		fmt.Println("STUN server:", cfg.NatHoleSTUNServer)
-		fmt.Println("Your NAT type is:", natFeature.NatType)
-		fmt.Println("Behavior is:", natFeature.Behavior)
-		fmt.Println("External address is:", addrs)
-		fmt.Println("Local address is:", localAddr.String())
-		fmt.Println("Public Network:", natFeature.PublicNetwork)
+		log.Warn("STUN server:", cfg.NatHoleSTUNServer)
+		log.Warn("Your NAT type is:", natFeature.NatType)
+		log.Warn("Behavior is:", natFeature.Behavior)
+		log.Warn("External address is:", addrs)
+		log.Warn("Local address is:", localAddr.String())
+		log.Warn("Public Network:", natFeature.PublicNetwork)
 		return nil
 	},
 }

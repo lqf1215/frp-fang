@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fatedier/frp/pkg/proto/udp"
 	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
@@ -277,7 +278,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 		return
 	}
 
-	xl.Warn("[visitor xtcp] nathole prepare start")
+	xl.Warn("[visitor xtcp] nathole prepare start with stun server: %s", sv.clientCfg.NatHoleSTUNServer)
 	prepareResult, err := nathole.Prepare([]string{sv.clientCfg.NatHoleSTUNServer})
 	if err != nil {
 		xl.Warn("nathole prepare error: %v", err)
@@ -327,7 +328,19 @@ func (sv *XTCPVisitor) makeNatHole() {
 		xl.Warn("[visitor xtcp] init tunnel session error: %v", err)
 		return
 	}
-	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end")
+	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%v] RemoteAddr=[%v]", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String())
+
+	go udp.ReadFromUDP(listenConn)
+
+	n, err := udp.SendUdpMessage(listenConn, raddr, msg.P2pMessageProxy{
+		Content: "我是proxy hello",
+		Sid:     natHoleRespMsg.Sid,
+	})
+	if err != nil {
+		xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
+	}
+	xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d]", n)
+
 }
 
 type TunnelSession interface {
@@ -434,6 +447,10 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	qs.session = quicConn
 	qs.listenConn = listenConn
 	qs.mu.Unlock()
+	err = quicConn.SendMessage([]byte("hello woshi visitor xtcp QUICTunnelSession"))
+	if err != nil {
+		log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
+	}
 	return nil
 }
 
