@@ -16,6 +16,7 @@ package transport
 
 import (
 	"context"
+	"github.com/fatedier/frp/pkg/util/log"
 	"reflect"
 	"sync"
 
@@ -82,7 +83,7 @@ func (impl *transporterImpl) DispatchWithType(m msg.Message, msgType, laneKey st
 		ch = byLaneKey[laneKey]
 	}
 	impl.mu.RUnlock()
-
+	log.Warn("DispatchWithType", "ch", ch, "msgType", msgType, "laneKey", laneKey)
 	if ch == nil {
 		return false
 	}

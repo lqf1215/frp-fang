@@ -350,7 +350,7 @@ func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) er
 	listenConn.Close()
 	laddr, _ := net.ResolveUDPAddr("udp", listenConn.LocalAddr().String())
 	lConn, err := net.DialUDP("udp", laddr, raddr)
-	log.Warn("[visitor xtcp] laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr().String())
+	log.Warn("[visitor xtcp] KCPTunnelSession laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr().String())
 	if err != nil {
 		return fmt.Errorf("dial udp error: %v", err)
 	}
@@ -368,7 +368,7 @@ func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) er
 		remote.Close()
 		return fmt.Errorf("initial client session error: %v", err)
 	}
-	log.Warn("[visitor xtcp] session: %v", session)
+	log.Warn("[visitor xtcp] KCPTunnelSession session: %v", session)
 	ks.mu.Lock()
 	ks.session = session
 	ks.lConn = lConn
@@ -414,7 +414,7 @@ func NewQUICTunnelSession(clientCfg *v1.ClientCommonConfig) TunnelSession {
 }
 
 func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
-	fmt.Sprintf("[visitor xtcp] QUICTunnelSession Init: %v", listenConn.LocalAddr().String())
+	log.Warn("[visitor xtcp] QUICTunnelSession Init: %v", listenConn.LocalAddr().String())
 	tlsConfig, err := transport.NewClientTLSConfig("", "", "", raddr.String())
 	if err != nil {
 		return fmt.Errorf("create tls config error: %v", err)
@@ -429,7 +429,7 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	if err != nil {
 		return fmt.Errorf("dial quic error: %v", err)
 	}
-	fmt.Sprintf("[visitor xtcp] Init session quicConn: %v", quicConn)
+	log.Warn("[visitor xtcp] Init session QUICTunnelSession quicConn: %v", quicConn)
 	qs.mu.Lock()
 	qs.session = quicConn
 	qs.listenConn = listenConn
