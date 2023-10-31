@@ -142,12 +142,19 @@ type UDPServer struct {
 }
 
 func ReadFromUDP(conn *net.UDPConn) {
-	log.Warn("[udp ReadFromUDP]start")
-	var buffer []byte
+	log.Warn("[udp ReadFromUDP]start", conn.LocalAddr())
+	if conn == nil {
+		log.Error("[udp ReadFromUDP]conn is nil")
+		return
+	}
+	var buffer [1028]byte
 	for {
-		n, addr, err := conn.ReadFromUDP(buffer)
+		n, addr, err := conn.ReadFromUDP(buffer[:])
 		if err != nil {
 			log.Error("[udp ReadFromUDP]Error reading from UDP connection: %v\n", err)
+			continue
+		}
+		if n == 0 {
 			continue
 		}
 

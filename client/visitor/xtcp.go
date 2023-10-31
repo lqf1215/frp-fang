@@ -321,14 +321,16 @@ func (sv *XTCPVisitor) makeNatHole() {
 		return
 	}
 	listenConn = newListenConn
-	xl.Info("[visitor xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s] newListenConn=[%s] [%s]", natHoleRespMsg.Sid, raddr, newListenConn.LocalAddr().String(), newListenConn.RemoteAddr().String())
+	xl.Info("[visitor xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s] ", natHoleRespMsg.Sid, raddr)
+	xl.Info("[visitor xtcp] establishing nat hole connection successful,  newListenConn=[%s] [%s]", newListenConn == nil, listenConn == nil)
 
 	if err := sv.session.Init(listenConn, raddr); err != nil {
+
 		listenConn.Close()
 		xl.Warn("[visitor xtcp] init tunnel session error: %v", err)
 		return
 	}
-	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%v] RemoteAddr=[%v]", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String())
+	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%+v] ", listenConn)
 
 	go udp.ReadFromUDP(listenConn)
 	xl.Warn("[visitor xtcp] makeNatHole  udp.ReadFromUDP en=[%v]", listenConn == nil)
