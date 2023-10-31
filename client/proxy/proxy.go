@@ -197,7 +197,7 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 		return
 	}
 
-	xl.Error("[proxy] join connections, localConn(l[%s] r[%s]) workConn(l[%s] r[%s])", localConn.LocalAddr().String(),
+	xl.Warn("[proxy] join connections, localConn(l[%s] r[%s]) workConn(l[%s] r[%s])", localConn.LocalAddr().String(),
 		localConn.RemoteAddr().String(), workConn.LocalAddr().String(), workConn.RemoteAddr().String())
 
 	if extraInfo.ProxyProtocolHeader != nil {
@@ -209,9 +209,9 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 	}
 
 	_, _, errs := libio.Join(localConn, remote)
-	xl.Debug("[proxy] join connections closed")
+	xl.Warn("[proxy] join connections closed")
 	if len(errs) > 0 {
-		xl.Trace("[proxy] join connections errors: %v", errs)
+		xl.Error("[proxy] join connections errors: %v", errs)
 	}
 	if compressionResourceRecycleFn != nil {
 		compressionResourceRecycleFn()

@@ -17,7 +17,6 @@ package udp
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/fatedier/frp/pkg/util/xlog"
 	"net"
@@ -161,34 +160,35 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 		// buf[:n] will be encoded to string, so the bytes can be reused
 		xl.Info("[udp ReadFromUDP]= buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
 
-		var data msg.Message
-		if err := json.Unmarshal(buf[:n], &data); err != nil {
-			xl.Error("Error unmarshaling JSON: %v\n", err)
-			continue
-		}
-		switch d := data.(type) {
-		case msg.P2pMessageVisitor:
-			xl.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", remoteAddr, d)
-		case msg.P2pMessageProxy:
-			xl.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", remoteAddr, d)
-		default:
-			xl.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, d)
-		}
+		//var data msg.Message
+		//if err := json.Unmarshal(buf[:n], &data); err != nil {
+		//	xl.Error("Error unmarshaling JSON: %v\n", err)
+		//	continue
+		//}
+		//switch d := data.(type) {
+		//case msg.P2pMessageVisitor:
+		//	xl.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", remoteAddr, d)
+		//case msg.P2pMessageProxy:
+		//	xl.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", remoteAddr, d)
+		//default:
+		//	xl.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, d)
+		//}
 
 	}
 
 }
 
 func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
-	err := msg.WriteMsg(conn, &message)
-	if err != nil {
-		log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
-	}
-	marshal, err := json.Marshal(&message)
-	if err != nil {
-		return 0, err
-	}
-	n, err := conn.WriteToUDP(marshal, raddr)
+	//err := msg.WriteMsg(conn, &message)
+	//if err != nil {
+	//	log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
+	//}
+	//marshal, err := json.Marshal(&message)
+	//if err != nil {
+	//	return 0, err
+	//}
+	b := []byte("CONNECTED-MODE SOCKET")
+	n, err := conn.WriteToUDP(b, raddr)
 
 	if err != nil {
 		return 0, err
