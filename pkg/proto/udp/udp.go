@@ -160,7 +160,7 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 			return
 		}
 		// buf[:n] will be encoded to string, so the bytes can be reused
-		xl.Info("[udp ReadFromUDP] buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
+		xl.Info("[udp ReadFromUDP]= buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
 
 		var data msg.Message
 		if err := json.Unmarshal(buf[:n], &data); err != nil {
@@ -181,7 +181,7 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 }
 
 func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
-	//err := msg.WriteMsg(conn, &message)
+	err := msg.WriteMsg(conn, &message)
 	marshal, err := json.Marshal(&message)
 	if err != nil {
 		return 0, err

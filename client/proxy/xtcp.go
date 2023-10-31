@@ -118,7 +118,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	xl.Warn("[proxy xtcp] xtcp ReadFromUDP end =[%v]", listenConn == nil)
 
 	n, err := udp.SendUdpMessage(listenConn, raddr, msg.P2pMessageProxy{
-		Content: "我是proxy hello",
+		Content: "proxyhello",
 		Sid:     natHoleRespMsg.Sid,
 	})
 	if err != nil {

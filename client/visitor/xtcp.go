@@ -336,7 +336,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 	xl.Warn("[visitor xtcp] makeNatHole  udp.ReadFromUDP en=[%v]", listenConn == nil)
 
 	n, err := udp.SendUdpMessage(listenConn, raddr, msg.P2pMessageProxy{
-		Content: "我是visitor hello",
+		Content: "visitorhello",
 		Sid:     natHoleRespMsg.Sid,
 	})
 	if err != nil {
