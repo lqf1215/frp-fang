@@ -57,17 +57,17 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	var natHoleSidMsg msg.NatHoleSid
 	err := msg.ReadMsgInto(conn, &natHoleSidMsg)
 	if err != nil {
-		xl.Error("xtcp read from workConn error: %v", err)
+		xl.Error("[proxy xtcp] xtcp read from workConn error: %v", err)
 		return
 	}
 
-	xl.Trace("nathole prepare start")
+	xl.Warn("[proxy xtcp] nathole prepare start")
 	prepareResult, err := nathole.Prepare([]string{pxy.clientCfg.NatHoleSTUNServer})
 	if err != nil {
-		xl.Warn("nathole prepare error: %v", err)
+		xl.Warn("[proxy xtcp] nathole prepare error: %v", err)
 		return
 	}
-	xl.Info("nathole prepare success, nat type: %s, behavior: %s, addresses: %v, assistedAddresses: %v",
+	xl.Info("[proxy xtcp] nathole prepare success, nat type: %s, behavior: %s, addresses: %v, assistedAddresses: %v",
 		prepareResult.NatType, prepareResult.Behavior, prepareResult.Addrs, prepareResult.AssistedAddrs)
 	defer prepareResult.ListenConn.Close()
 
@@ -81,14 +81,14 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 		AssistedAddrs: prepareResult.AssistedAddrs,
 	}
 
-	xl.Trace("nathole exchange info start")
+	xl.Warn("[proxy xtcp] nathole exchange info start")
 	natHoleRespMsg, err := nathole.ExchangeInfo(pxy.ctx, pxy.msgTransporter, transactionID, natHoleClientMsg, 5*time.Second)
 	if err != nil {
-		xl.Warn("nathole exchange info error: %v", err)
+		xl.Warn("[proxy xtcp] nathole exchange info error: %v", err)
 		return
 	}
 
-	xl.Info("get natHoleRespMsg, sid [%s], protocol [%s], candidate address %v, assisted address %v, detectBehavior: %+v",
+	xl.Info("[proxy xtcp] get natHoleRespMsg, sid [%s], protocol [%s], candidate address %v, assisted address %v, detectBehavior: %+v",
 		natHoleRespMsg.Sid, natHoleRespMsg.Protocol, natHoleRespMsg.CandidateAddrs,
 		natHoleRespMsg.AssistedAddrs, natHoleRespMsg.DetectBehavior)
 
@@ -96,7 +96,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	newListenConn, raddr, err := nathole.MakeHole(pxy.ctx, listenConn, natHoleRespMsg, []byte(pxy.cfg.Secretkey))
 	if err != nil {
 		listenConn.Close()
-		xl.Warn("make hole error: %v", err)
+		xl.Warn("[proxy xtcp] make hole error: %v send msg sid [%s]", err, natHoleRespMsg.Sid)
 		_ = pxy.msgTransporter.Send(&msg.NatHoleReport{
 			Sid:     natHoleRespMsg.Sid,
 			Success: false,
@@ -104,12 +104,13 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 		return
 	}
 	listenConn = newListenConn
-	xl.Info("establishing nat hole connection successful, sid [%s], remoteAddr [%s]", natHoleRespMsg.Sid, raddr)
+	xl.Info("[proxy xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s]", natHoleRespMsg.Sid, raddr)
 
 	_ = pxy.msgTransporter.Send(&msg.NatHoleReport{
 		Sid:     natHoleRespMsg.Sid,
 		Success: true,
 	})
+	xl.Warn("[proxy xtcp] nathole exchange info send msg end sid [%s] success =true", natHoleRespMsg.Sid)
 
 	if natHoleRespMsg.Protocol == "kcp" {
 		pxy.listenByKCP(listenConn, raddr, startWorkConnMsg)
@@ -118,6 +119,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 
 	// default is quic
 	pxy.listenByQUIC(listenConn, raddr, startWorkConnMsg)
+	xl.Warn("[proxy xtcp] xtcp listen by quic end")
 }
 
 func (pxy *XTCPProxy) listenByKCP(listenConn *net.UDPConn, raddr *net.UDPAddr, startWorkConnMsg *msg.StartWorkConn) {

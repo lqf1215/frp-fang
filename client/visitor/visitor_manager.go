@@ -108,6 +108,7 @@ func (vm *Manager) Close() {
 // Hold lock before calling this function.
 func (vm *Manager) startVisitor(cfg v1.VisitorConfigurer) (err error) {
 	xl := xlog.FromContextSafe(vm.ctx)
+	xl.Warn("[visitor] start visitor [%s]", cfg.GetBaseConfig().Name)
 	name := cfg.GetBaseConfig().Name
 	visitor := NewVisitor(vm.ctx, cfg, vm.clientCfg, vm.helper)
 	err = visitor.Run()

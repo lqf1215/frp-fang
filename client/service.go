@@ -115,6 +115,7 @@ func (svr *Service) Run(ctx context.Context) error {
 		if _, _, err := net.SplitHostPort(dnsAddr); err != nil {
 			dnsAddr = net.JoinHostPort(dnsAddr, "53")
 		}
+		xl.Warn("[client service] set custom DNSServer: %s", dnsAddr)
 		// Change default dns server for frpc
 		net.DefaultResolver = &net.Resolver{
 			PreferGo: true,
@@ -126,6 +127,7 @@ func (svr *Service) Run(ctx context.Context) error {
 
 	// login to frps
 	for {
+		xl.Warn("[client service] login to server start")
 		conn, cm, err := svr.login()
 		if err != nil {
 			xl.Warn("login to server failed: %v", err)
@@ -139,6 +141,7 @@ func (svr *Service) Run(ctx context.Context) error {
 		} else {
 			// login success
 			ctl := NewControl(svr.ctx, svr.runID, conn, cm, svr.cfg, svr.pxyCfgs, svr.visitorCfgs, svr.authSetter)
+			xl.Warn("[client service] login to server success runId: %s pxyCfg:%v visitorCfg:%v", svr.runID, svr.pxyCfgs, svr.visitorCfgs)
 			ctl.Run()
 			svr.ctlMu.Lock()
 			svr.ctl = ctl
@@ -256,6 +259,7 @@ func (svr *Service) login() (conn net.Conn, cm *ConnectionManager, err error) {
 
 	conn, err = cm.Connect()
 	if err != nil {
+		xl.Error("[client service] login connect to server error: %v", err)
 		return
 	}
 
@@ -268,6 +272,7 @@ func (svr *Service) login() (conn net.Conn, cm *ConnectionManager, err error) {
 		Timestamp: time.Now().Unix(),
 		RunID:     svr.runID,
 		Metas:     svr.cfg.Metadatas,
+		Password:  "client service login 123",
 	}
 
 	// Add auth
@@ -280,6 +285,7 @@ func (svr *Service) login() (conn net.Conn, cm *ConnectionManager, err error) {
 	}
 
 	var loginRespMsg msg.LoginResp
+	//TODO 阻塞 等待服务端响应
 	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	if err = msg.ReadMsgInto(conn, &loginRespMsg); err != nil {
 		return
@@ -353,6 +359,7 @@ func NewConnectionManager(ctx context.Context, cfg *v1.ClientCommonConfig) *Conn
 func (cm *ConnectionManager) OpenConnection() error {
 	xl := xlog.FromContextSafe(cm.ctx)
 
+	xl.Warn("[client service] OpenConnection [%s] Protocol [%s]", cm.cfg.ServerAddr, cm.cfg.Transport.Protocol)
 	// special for quic
 	if strings.EqualFold(cm.cfg.Transport.Protocol, "quic") {
 		var tlsConfig *tls.Config

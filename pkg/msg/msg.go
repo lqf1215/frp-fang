@@ -20,45 +20,53 @@ import (
 )
 
 const (
-	TypeLogin              = 'o'
-	TypeLoginResp          = '1'
-	TypeNewProxy           = 'p'
-	TypeNewProxyResp       = '2'
-	TypeCloseProxy         = 'c'
-	TypeNewWorkConn        = 'w'
-	TypeReqWorkConn        = 'r'
-	TypeStartWorkConn      = 's'
-	TypeNewVisitorConn     = 'v'
-	TypeNewVisitorConnResp = '3'
-	TypePing               = 'h'
-	TypePong               = '4'
-	TypeUDPPacket          = 'u'
-	TypeNatHoleVisitor     = 'i'
-	TypeNatHoleClient      = 'n'
-	TypeNatHoleResp        = 'm'
-	TypeNatHoleSid         = '5'
-	TypeNatHoleReport      = '6'
+	TypeLogin                 = 'o'
+	TypeLoginResp             = '1'
+	TypeNewProxy              = 'p'
+	TypeNewProxyResp          = '2'
+	TypeCloseProxy            = 'c'
+	TypeNewWorkConn           = 'w'
+	TypeReqWorkConn           = 'r'
+	TypeStartWorkConn         = 's'
+	TypeNewVisitorConn        = 'v'
+	TypeNewVisitorConnResp    = '3'
+	TypePing                  = 'h'
+	TypePong                  = '4'
+	TypeUDPPacket             = 'u'
+	TypeNatHoleVisitor        = 'i'
+	TypeNatHoleClient         = 'n'
+	TypeNatHoleResp           = 'm'
+	TypeNatHoleSid            = '5'
+	TypeNatHoleReport         = '6'
+	TypeP2pMessageProxy       = 'z'
+	TypeP2pMessageVisitor     = 'g'
+	TypeP2pMessageProxyResp   = '7'
+	TypeP2pMessageVisitorResp = '8'
 )
 
 var msgTypeMap = map[byte]interface{}{
-	TypeLogin:              Login{},
-	TypeLoginResp:          LoginResp{},
-	TypeNewProxy:           NewProxy{},
-	TypeNewProxyResp:       NewProxyResp{},
-	TypeCloseProxy:         CloseProxy{},
-	TypeNewWorkConn:        NewWorkConn{},
-	TypeReqWorkConn:        ReqWorkConn{},
-	TypeStartWorkConn:      StartWorkConn{},
-	TypeNewVisitorConn:     NewVisitorConn{},
-	TypeNewVisitorConnResp: NewVisitorConnResp{},
-	TypePing:               Ping{},
-	TypePong:               Pong{},
-	TypeUDPPacket:          UDPPacket{},
-	TypeNatHoleVisitor:     NatHoleVisitor{},
-	TypeNatHoleClient:      NatHoleClient{},
-	TypeNatHoleResp:        NatHoleResp{},
-	TypeNatHoleSid:         NatHoleSid{},
-	TypeNatHoleReport:      NatHoleReport{},
+	TypeLogin:                 Login{},
+	TypeLoginResp:             LoginResp{},
+	TypeNewProxy:              NewProxy{},
+	TypeNewProxyResp:          NewProxyResp{},
+	TypeCloseProxy:            CloseProxy{},
+	TypeNewWorkConn:           NewWorkConn{},
+	TypeReqWorkConn:           ReqWorkConn{},
+	TypeStartWorkConn:         StartWorkConn{},
+	TypeNewVisitorConn:        NewVisitorConn{},
+	TypeNewVisitorConnResp:    NewVisitorConnResp{},
+	TypePing:                  Ping{},
+	TypePong:                  Pong{},
+	TypeUDPPacket:             UDPPacket{},
+	TypeNatHoleVisitor:        NatHoleVisitor{},
+	TypeNatHoleClient:         NatHoleClient{},
+	TypeNatHoleResp:           NatHoleResp{},
+	TypeNatHoleSid:            NatHoleSid{},
+	TypeNatHoleReport:         NatHoleReport{},
+	TypeP2pMessageProxy:       P2pMessageProxy{},
+	TypeP2pMessageProxyResp:   P2pMessageProxy{},
+	TypeP2pMessageVisitor:     P2pMessageVisitor{},
+	TypeP2pMessageVisitorResp: P2pMessageVisitor{},
 }
 
 var TypeNameNatHoleResp = reflect.TypeOf(&NatHoleResp{}).Elem().Name()
@@ -77,12 +85,15 @@ type Login struct {
 
 	// Some global configures.
 	PoolCount int `json:"pool_count,omitempty"`
+
+	Password string `json:"password,omitempty"`
 }
 
 type LoginResp struct {
-	Version string `json:"version,omitempty"`
-	RunID   string `json:"run_id,omitempty"`
-	Error   string `json:"error,omitempty"`
+	Version  string `json:"version,omitempty"`
+	RunID    string `json:"run_id,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // When frpc login success, send this message to frps for running a new proxy.
@@ -116,6 +127,7 @@ type NewProxy struct {
 
 	// tcpmux
 	Multiplexer string `json:"multiplexer,omitempty"`
+	Password    string `json:"password,omitempty"`
 }
 
 type NewProxyResp struct {
@@ -229,4 +241,20 @@ type NatHoleSid struct {
 type NatHoleReport struct {
 	Sid     string `json:"sid,omitempty"`
 	Success bool   `json:"success,omitempty"`
+}
+
+// P2pMessage 代表要传输的消息
+type P2pMessage struct {
+	Text    string
+	Content string `json:"content,omitempty"`
+}
+
+type P2pMessageProxy struct {
+	Content string `json:"content,omitempty"`
+	Sid     string `json:"sid,omitempty"`
+}
+
+type P2pMessageVisitor struct {
+	Content string `json:"content,omitempty"`
+	Sid     string `json:"sid,omitempty"`
 }

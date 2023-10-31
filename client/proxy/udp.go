@@ -15,6 +15,7 @@
 package proxy
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"reflect"
@@ -61,6 +62,7 @@ func NewUDPProxy(baseProxy *BaseProxy, cfg v1.ProxyConfigurer) Proxy {
 }
 
 func (pxy *UDPProxy) Run() (err error) {
+	fmt.Printf("[proxy udp] run localIP: %s, name: %s LocalPort:%v \n", pxy.cfg.LocalIP, pxy.cfg.Name, pxy.cfg.LocalPort)
 	pxy.localAddr, err = net.ResolveUDPAddr("udp", net.JoinHostPort(pxy.cfg.LocalIP, strconv.Itoa(pxy.cfg.LocalPort)))
 	if err != nil {
 		return
@@ -88,7 +90,7 @@ func (pxy *UDPProxy) Close() {
 
 func (pxy *UDPProxy) InWorkConn(conn net.Conn, _ *msg.StartWorkConn) {
 	xl := pxy.xl
-	xl.Info("incoming a new work connection for udp proxy, %s", conn.RemoteAddr().String())
+	xl.Info("[proxy udp] incoming a new work connection for udp proxy, %s", conn.RemoteAddr().String())
 	// close resources releated with old workConn
 	pxy.Close()
 
@@ -103,7 +105,7 @@ func (pxy *UDPProxy) InWorkConn(conn net.Conn, _ *msg.StartWorkConn) {
 		rwc, err = libio.WithEncryption(rwc, []byte(pxy.clientCfg.Auth.Token))
 		if err != nil {
 			conn.Close()
-			xl.Error("create encryption stream error: %v", err)
+			xl.Error("[proxy udp]  create encryption stream error: %v", err)
 			return
 		}
 	}
@@ -123,32 +125,32 @@ func (pxy *UDPProxy) InWorkConn(conn net.Conn, _ *msg.StartWorkConn) {
 		for {
 			var udpMsg msg.UDPPacket
 			if errRet := msg.ReadMsgInto(conn, &udpMsg); errRet != nil {
-				xl.Warn("read from workConn for udp error: %v", errRet)
+				xl.Warn("[proxy udp]  read from workConn for udp error: %v", errRet)
 				return
 			}
 			if errRet := errors.PanicToError(func() {
-				xl.Trace("get udp package from workConn: %s", udpMsg.Content)
+				xl.Trace("[proxy udp]  get udp package from workConn: %s", udpMsg.Content)
 				readCh <- &udpMsg
 			}); errRet != nil {
-				xl.Info("reader goroutine for udp work connection closed: %v", errRet)
+				xl.Info("[proxy udp] reader goroutine for udp work connection closed: %v", errRet)
 				return
 			}
 		}
 	}
 	workConnSenderFn := func(conn net.Conn, sendCh chan msg.Message) {
 		defer func() {
-			xl.Info("writer goroutine for udp work connection closed")
+			xl.Info("[proxy udp] writer goroutine for udp work connection closed")
 		}()
 		var errRet error
 		for rawMsg := range sendCh {
 			switch m := rawMsg.(type) {
 			case *msg.UDPPacket:
-				xl.Trace("send udp package to workConn: %s", m.Content)
+				xl.Warn("[proxy udp] send udp package to workConn: %s", m.Content)
 			case *msg.Ping:
-				xl.Trace("send ping message to udp workConn")
+				xl.Warn("[proxy udp] send ping message to udp workConn")
 			}
 			if errRet = msg.WriteMsg(conn, rawMsg); errRet != nil {
-				xl.Error("udp work write error: %v", errRet)
+				xl.Error("[proxy udp] udp work write error: %v", errRet)
 				return
 			}
 		}

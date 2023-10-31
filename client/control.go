@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
 	"runtime/debug"
@@ -116,6 +117,7 @@ func NewControl(
 }
 
 func (ctl *Control) Run() {
+	log.Warn("[client Control]  Run start pxyCfgs: %v", ctl.pxyCfgs)
 	go ctl.worker()
 
 	// start all proxies
@@ -180,7 +182,7 @@ func (ctl *Control) HandleNatHoleResp(inMsg *msg.NatHoleResp) {
 	// Dispatch the NatHoleResp message to the related proxy.
 	ok := ctl.msgTransporter.DispatchWithType(inMsg, msg.TypeNameNatHoleResp, inMsg.TransactionID)
 	if !ok {
-		xl.Trace("dispatch NatHoleResp message to related proxy error")
+		xl.Error("dispatch NatHoleResp message to related proxy error")
 	}
 }
 
@@ -294,8 +296,9 @@ func (ctl *Control) msgHandler() {
 	for {
 		select {
 		case <-hbSendCh:
+
 			// send heartbeat to server
-			xl.Debug("send heartbeat to server")
+			xl.Error("send heartbeat to server hbSendCh")
 			pingMsg := &msg.Ping{}
 			if err := ctl.authSetter.SetPing(pingMsg); err != nil {
 				xl.Warn("error during ping authentication: %v. skip sending ping message", err)
@@ -316,10 +319,13 @@ func (ctl *Control) msgHandler() {
 
 			switch m := rawMsg.(type) {
 			case *msg.ReqWorkConn:
+				xl.Warn("[ReqWorkConn] =%v", m)
 				go ctl.HandleReqWorkConn(m)
 			case *msg.NewProxyResp:
+				xl.Warn("[NewProxyResp] =%v", m)
 				ctl.HandleNewProxyResp(m)
 			case *msg.NatHoleResp:
+				xl.Warn("[NatHoleResp] =%v", m)
 				ctl.HandleNatHoleResp(m)
 			case *msg.Pong:
 				if m.Error != "" {

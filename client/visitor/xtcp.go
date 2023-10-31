@@ -60,6 +60,7 @@ func (sv *XTCPVisitor) Run() (err error) {
 	}
 
 	if sv.cfg.BindPort > 0 {
+		fmt.Println("[visitor xtcp] sv.cfg.BindPort > 0", sv.cfg.BindPort)
 		sv.l, err = net.Listen("tcp", net.JoinHostPort(sv.cfg.BindAddr, strconv.Itoa(sv.cfg.BindPort)))
 		if err != nil {
 			return
@@ -108,6 +109,7 @@ func (sv *XTCPVisitor) internalConnWorker() {
 			xl.Warn("xtcp internal listener closed")
 			return
 		}
+		xl.Info("[visitor] internalConnWorker handleConn start")
 		go sv.handleConn(conn)
 	}
 }
@@ -140,14 +142,14 @@ func (sv *XTCPVisitor) keepTunnelOpenWorker() {
 		case <-sv.ctx.Done():
 			return
 		case <-ticker.C:
-			xl.Debug("keepTunnelOpenWorker try to check tunnel...")
+			xl.Error("keepTunnelOpenWorker try to check tunnel...")
 			conn, err := sv.getTunnelConn()
 			if err != nil {
 				xl.Warn("keepTunnelOpenWorker get tunnel connection error: %v", err)
 				_ = sv.retryLimiter.Wait(sv.ctx)
 				continue
 			}
-			xl.Debug("keepTunnelOpenWorker check success")
+			xl.Error("keepTunnelOpenWorker check success")
 			if conn != nil {
 				conn.Close()
 			}
@@ -164,7 +166,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 		}
 	}()
 
-	xl.Debug("get a new xtcp user connection")
+	xl.Error("[visitor xtcp] get a new xtcp user connection")
 
 	// Open a tunnel connection to the server. If there is already a successful hole-punching connection,
 	// it will be reused. Otherwise, it will block and wait for a successful hole-punching connection until timeout.
@@ -190,7 +192,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 		isConnTrasfered = true
 		return
 	}
-
+	xl.Warn("[visitor] handleConn tunnelConn cfg=[%+v]", sv.cfg)
 	var muxConnRWCloser io.ReadWriteCloser = tunnelConn
 	if sv.cfg.Transport.UseEncryption {
 		muxConnRWCloser, err = libio.WithEncryption(muxConnRWCloser, []byte(sv.cfg.SecretKey))
@@ -206,7 +208,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 	}
 
 	_, _, errs := libio.Join(userConn, muxConnRWCloser)
-	xl.Debug("join connections closed")
+	xl.Error("join connections closed")
 	if len(errs) > 0 {
 		xl.Trace("join connections errors: %v", errs)
 	}
@@ -268,19 +270,19 @@ func (sv *XTCPVisitor) getTunnelConn() (net.Conn, error) {
 // 4. Create a tunnel session using an underlying UDP connection.
 func (sv *XTCPVisitor) makeNatHole() {
 	xl := xlog.FromContextSafe(sv.ctx)
-	xl.Trace("makeNatHole start")
+	xl.Warn("[visitor xtcp] makeNatHole start")
 	if err := nathole.PreCheck(sv.ctx, sv.helper.MsgTransporter(), sv.cfg.ServerName, 5*time.Second); err != nil {
 		xl.Warn("nathole precheck error: %v", err)
 		return
 	}
 
-	xl.Trace("nathole prepare start")
+	xl.Warn("[visitor xtcp] nathole prepare start")
 	prepareResult, err := nathole.Prepare([]string{sv.clientCfg.NatHoleSTUNServer})
 	if err != nil {
 		xl.Warn("nathole prepare error: %v", err)
 		return
 	}
-	xl.Info("nathole prepare success, nat type: %s, behavior: %s, addresses: %v, assistedAddresses: %v",
+	xl.Info("[visitor xtcp] nathole prepare success, nat type: %s, behavior: %s, addresses: %v, assistedAddresses: %v",
 		prepareResult.NatType, prepareResult.Behavior, prepareResult.Addrs, prepareResult.AssistedAddrs)
 
 	listenConn := prepareResult.ListenConn
@@ -298,30 +300,30 @@ func (sv *XTCPVisitor) makeNatHole() {
 		AssistedAddrs: prepareResult.AssistedAddrs,
 	}
 
-	xl.Trace("nathole exchange info start")
+	xl.Warn("[visitor xtcp] nathole exchange info start")
 	natHoleRespMsg, err := nathole.ExchangeInfo(sv.ctx, sv.helper.MsgTransporter(), transactionID, natHoleVisitorMsg, 5*time.Second)
 	if err != nil {
 		listenConn.Close()
-		xl.Warn("nathole exchange info error: %v", err)
+		xl.Warn("[visitor xtcp] nathole exchange info error: %v", err)
 		return
 	}
 
-	xl.Info("get natHoleRespMsg, sid [%s], protocol [%s], candidate address %v, assisted address %v, detectBehavior: %+v",
+	xl.Info("[visitor xtcp] get natHoleRespMsg, sid [%s], protocol [%s], candidate address %v, assisted address %v, detectBehavior: %+v",
 		natHoleRespMsg.Sid, natHoleRespMsg.Protocol, natHoleRespMsg.CandidateAddrs,
 		natHoleRespMsg.AssistedAddrs, natHoleRespMsg.DetectBehavior)
 
 	newListenConn, raddr, err := nathole.MakeHole(sv.ctx, listenConn, natHoleRespMsg, []byte(sv.cfg.SecretKey))
 	if err != nil {
 		listenConn.Close()
-		xl.Warn("make hole error: %v", err)
+		xl.Warn("[visitor xtcp] make hole error: %v", err)
 		return
 	}
 	listenConn = newListenConn
-	xl.Info("establishing nat hole connection successful, sid [%s], remoteAddr [%s]", natHoleRespMsg.Sid, raddr)
+	xl.Info("[visitor xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s]", natHoleRespMsg.Sid, raddr)
 
 	if err := sv.session.Init(listenConn, raddr); err != nil {
 		listenConn.Close()
-		xl.Warn("init tunnel session error: %v", err)
+		xl.Warn("[visitor xtcp] init tunnel session error: %v", err)
 		return
 	}
 }
@@ -343,9 +345,11 @@ func NewKCPTunnelSession() TunnelSession {
 }
 
 func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
+
 	listenConn.Close()
 	laddr, _ := net.ResolveUDPAddr("udp", listenConn.LocalAddr().String())
 	lConn, err := net.DialUDP("udp", laddr, raddr)
+	fmt.Sprintf("[visitor xtcp] laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr().String())
 	if err != nil {
 		return fmt.Errorf("dial udp error: %v", err)
 	}
@@ -363,6 +367,7 @@ func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) er
 		remote.Close()
 		return fmt.Errorf("initial client session error: %v", err)
 	}
+	fmt.Sprintf("[visitor xtcp] session: %v", session)
 	ks.mu.Lock()
 	ks.session = session
 	ks.lConn = lConn
@@ -408,6 +413,7 @@ func NewQUICTunnelSession(clientCfg *v1.ClientCommonConfig) TunnelSession {
 }
 
 func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
+	fmt.Sprintf("[visitor xtcp] QUICTunnelSession Init: %v", listenConn.LocalAddr().String())
 	tlsConfig, err := transport.NewClientTLSConfig("", "", "", raddr.String())
 	if err != nil {
 		return fmt.Errorf("create tls config error: %v", err)
@@ -422,6 +428,7 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	if err != nil {
 		return fmt.Errorf("dial quic error: %v", err)
 	}
+	fmt.Sprintf("[visitor xtcp] Init session quicConn: %v", quicConn)
 	qs.mu.Lock()
 	qs.session = quicConn
 	qs.listenConn = listenConn

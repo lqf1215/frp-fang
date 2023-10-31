@@ -485,9 +485,12 @@ func (svr *Service) HandleListener(l net.Listener) {
 						return
 					}
 					go svr.handleConnection(ctx, stream)
+					xl.Warn("[server service] handleConnection end111")
 				}
 			} else {
 				svr.handleConnection(ctx, frpConn)
+				xl.Warn("[server service] handleConnection end222")
+
 			}
 		}(ctx, c)
 	}
@@ -511,6 +514,8 @@ func (svr *Service) HandleQUICListener(l *quic.Listener) {
 					return
 				}
 				go svr.handleConnection(ctx, utilnet.QuicStreamToNetConn(stream, frpConn))
+				log.Warn("[server service] HandleQUICListener end111")
+
 			}
 		}(context.Background(), c)
 	}
@@ -573,7 +578,10 @@ func (svr *Service) RegisterWorkConn(workConn net.Conn, newMsg *msg.NewWorkConn)
 		},
 		NewWorkConn: *newMsg,
 	}
+
 	retContent, err := svr.pluginManager.NewWorkConn(content)
+	log.Warn("[server service] RegisterWorkConn ")
+
 	if err == nil {
 		newMsg = &retContent.NewWorkConn
 		// Check auth.

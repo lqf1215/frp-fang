@@ -250,10 +250,10 @@ func (ctl *Control) RegisterWorkConn(conn net.Conn) error {
 
 	select {
 	case ctl.workConnCh <- conn:
-		xl.Debug("new work connection registered")
+		xl.Error("new work connection registered")
 		return nil
 	default:
-		xl.Debug("work connection pool is full, discarding")
+		xl.Error("work connection pool is full, discarding")
 		return fmt.Errorf("work connection pool is full, discarding")
 	}
 }
@@ -275,6 +275,7 @@ func (ctl *Control) GetWorkConn() (workConn net.Conn, err error) {
 	// get a work connection from the pool
 	select {
 	case workConn, ok = <-ctl.workConnCh:
+		xl.Info("[server] get work connection from pool workConn=%v", workConn.LocalAddr().String())
 		if !ok {
 			err = pkgerr.ErrCtlClosed
 			return
@@ -334,6 +335,8 @@ func (ctl *Control) writer() {
 			xl.Info("control writer is closing")
 			return
 		}
+
+		xl.Warn("[server] send message to client conn=%v ,token=%v %+v", ctl.conn.LocalAddr().String(), ctl.serverCfg.Auth.Token, m)
 
 		if err := msg.WriteMsg(encWriter, m); err != nil {
 			xl.Warn("write message to control connection error: %v", err)
@@ -472,6 +475,7 @@ func (ctl *Control) manager() {
 
 			switch m := rawMsg.(type) {
 			case *msg.NewProxy:
+				xl.Warn("[server] NewProxy --- %+v", m)
 				content := &plugin.NewProxyContent{
 					User: plugin.UserInfo{
 						User:  ctl.loginMsg.User,
@@ -502,15 +506,20 @@ func (ctl *Control) manager() {
 				}
 				ctl.sendCh <- resp
 			case *msg.NatHoleVisitor:
+				xl.Warn("[server] NatHoleVisitor --- %+v", m)
 				go ctl.HandleNatHoleVisitor(m)
 			case *msg.NatHoleClient:
+				xl.Warn("[server] NatHoleClient --- %+v", m)
 				go ctl.HandleNatHoleClient(m)
 			case *msg.NatHoleReport:
+				xl.Warn("[server] NatHoleReport --- %+v", m)
 				go ctl.HandleNatHoleReport(m)
 			case *msg.CloseProxy:
+				xl.Warn("[server] CloseProxy --- %+v", m)
 				_ = ctl.CloseProxy(m)
 				xl.Info("close proxy [%s] success", m.ProxyName)
 			case *msg.Ping:
+				xl.Warn("[server] Ping --- %+v", m)
 				content := &plugin.PingContent{
 					User: plugin.UserInfo{
 						User:  ctl.loginMsg.User,
