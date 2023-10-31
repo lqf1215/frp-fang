@@ -132,8 +132,8 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 		})
 	}
 
-	xl.Warn("[proxy] handle tcp work connection, use_encryption: %t, use_compression: %t",
-		baseCfg.Transport.UseEncryption, baseCfg.Transport.UseCompression)
+	xl.Warn("[proxy] handle tcp work connection, use_encryption: %t, use_compression: %t encKey=[%v]",
+		baseCfg.Transport.UseEncryption, baseCfg.Transport.UseCompression, encKey)
 	if baseCfg.Transport.UseEncryption {
 		remote, err = libio.WithEncryption(remote, encKey)
 		if err != nil {
@@ -151,6 +151,8 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 	var extraInfo plugin.ExtraInfo
 	if baseCfg.Transport.ProxyProtocolVersion != "" {
 		if m.SrcAddr != "" && m.SrcPort != 0 {
+			xl.Info("[proxy] m.dstAddr  dstAddr=[%v] dstPort=[%v]", m.DstAddr, m.DstPort)
+			xl.Info("[proxy] m.SrcAddr SrcAddr=[%v] SrcPort=[%v]", m.SrcAddr, m.SrcPort)
 			if m.DstAddr == "" {
 				m.DstAddr = "127.0.0.1"
 			}

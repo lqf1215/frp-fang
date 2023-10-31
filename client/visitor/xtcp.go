@@ -431,8 +431,10 @@ func NewQUICTunnelSession(clientCfg *v1.ClientCommonConfig) TunnelSession {
 }
 
 func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
-	log.Warn("[visitor xtcp] QUICTunnelSession Init: %v raddr=%v", listenConn.LocalAddr().String(), raddr.String())
+	log.Warn("[visitor xtcp] QUICTunnelSession Init:LocalAddr %v RemoteAddr %v  raddr=%v", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String(), raddr.String())
 	tlsConfig, err := transport.NewClientTLSConfig("", "", "", raddr.String())
+
+	log.Warn("[visitor xtcp] QUICTunnelSession Init: tlsConfig=[%+v] Transport.QUIC=[%+v]", tlsConfig, qs.clientCfg.Transport.QUIC)
 	if err != nil {
 		return fmt.Errorf("create tls config error: %v", err)
 	}

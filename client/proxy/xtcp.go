@@ -124,7 +124,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	if err != nil {
 		xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
 	}
-	xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d]", n)
+	xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d] protocol=%v", n, natHoleRespMsg.Protocol)
 
 	if natHoleRespMsg.Protocol == "kcp" {
 		pxy.listenByKCP(listenConn, raddr, startWorkConnMsg)
@@ -187,7 +187,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Warn("create tls config error: %v", err)
 		return
 	}
-	xl.Warn("[proxy xtcp] xtcp listen by quic listenByQUIC start LocalAddr [%s]", listenConn.LocalAddr().String())
+	xl.Warn("[proxy xtcp] xtcp listen by quic listenByQUIC start LocalAddr [%s] RemoteAddr [%s] ", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String())
 	tlsConfig.NextProtos = []string{"frp"}
 	quicListener, err := quic.Listen(listenConn, tlsConfig,
 		&quic.Config{

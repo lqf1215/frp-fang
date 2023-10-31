@@ -218,7 +218,7 @@ func MakeHole(ctx context.Context, listenConn *net.UDPConn, m *msg.NatHoleResp, 
 	for _, detectAddr := range detectAddrs {
 		for _, conn := range listenConns {
 			if err := sendSidMessage(ctx, conn, m.Sid, transactionID, detectAddr, key, m.DetectBehavior.TTL); err != nil {
-				xl.Trace("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
+				xl.Error("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
 			}
 		}
 	}
@@ -367,7 +367,8 @@ func sendSidMessage(
 			}()
 		}
 	}
-
+	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %s RemoteAddr %s ", conn.LocalAddr().String(), conn.RemoteAddr().String())
+	xl.Warn("[nathole] sendSidMessage send sid message buf %s raddr %s ", buf, raddr)
 	if _, err := conn.WriteToUDP(buf, raddr); err != nil {
 		return err
 	}
@@ -424,7 +425,7 @@ func sendSidMessageToRandomPorts(
 		for _, ip := range lo.Uniq(parseIPs(addrs)) {
 			detectAddr := net.JoinHostPort(ip, strconv.Itoa(port))
 			if err := sendFunc(conn, detectAddr); err != nil {
-				xl.Trace("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
+				xl.Error("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
 			}
 			time.Sleep(time.Millisecond * 15)
 		}

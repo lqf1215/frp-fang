@@ -157,14 +157,14 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 		// buf[:n] will be encoded to string, so the bytes can be reused
 		xl.Info("[udp ReadFromUDP]= buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
 
-		var m msg.Message
-		msgByte, err := nathole.DecodeBytes(buf[:n], []byte("abcdefg"), &m)
+		//var m msg.Message
+		msgByte, err := nathole.DecodeBytes(buf[:n], []byte("abcdefg"))
 		if err != nil {
 			xl.Error("decode sid message error: %v", err)
 			continue
 		}
 		xl.Info("[udp ReadFromUDP]Received UDP data from %s: %v\n", remoteAddr, string(msgByte))
-		xl.Info("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, m)
+		//xl.Info("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, m)
 		//var data msg.Message
 		//if err := json.Unmarshal(buf[:n], &data); err != nil {
 		//	xl.Error("Error unmarshaling JSON: %v\n", err)

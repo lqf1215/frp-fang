@@ -58,16 +58,13 @@ func EncodeBytes(buffer, key []byte) ([]byte, error) {
 	return buf, nil
 }
 
-func DecodeBytes(data, key []byte, m msg.Message) ([]byte, error) {
+func DecodeBytes(data, key []byte) ([]byte, error) {
 	buf, err := crypto.Decode(data, key)
 	if err != nil {
 		return nil, err
 	}
 	log.Warn("DecodeBytes: %v", string(buf))
-	err = msg.ReadMsgInto(bytes.NewReader(buf), m)
-	if err != nil {
-		log.Error("DecodeBytes error: %v", err)
-	}
+
 	return buf, nil
 }
 
