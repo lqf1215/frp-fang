@@ -17,6 +17,7 @@ package udp
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"github.com/fatedier/frp/pkg/nathole"
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/fatedier/frp/pkg/util/xlog"
@@ -161,6 +162,13 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 		// buf[:n] will be encoded to string, so the bytes can be reused
 		xl.Info("[udp ReadFromUDP]= buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
 
+		var m msg.Message
+		if err := nathole.DecodeMessageInto(buf[:n], []byte("abcdefg"), &m); err != nil {
+			xl.Error("decode sid message error: %v", err)
+			continue
+		}
+
+		xl.Info("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, m)
 		//var data msg.Message
 		//if err := json.Unmarshal(buf[:n], &data); err != nil {
 		//	xl.Error("Error unmarshaling JSON: %v\n", err)
@@ -184,11 +192,14 @@ func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) 
 	//if err != nil {
 	//	log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
 	//}
-	//marshal, err := json.Marshal(&message)
-	//if err != nil {
-	//	return 0, err
-	//}
-	buf, err := nathole.EncodeMessage(message, []byte("abcdefg"))
+	marshal, err := json.Marshal(&message)
+	if err != nil {
+		return 0, err
+	}
+
+	buf, err := nathole.EncodeMessage(msg.UDPPacket{
+		Content: string(marshal),
+	}, []byte("abcdefg"))
 	n, err := conn.WriteToUDP(buf, raddr)
 
 	if err != nil {

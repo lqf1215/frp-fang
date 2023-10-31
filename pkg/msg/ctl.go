@@ -15,6 +15,7 @@
 package msg
 
 import (
+	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 
 	jsonMsg "github.com/fatedier/golib/msg/json"
@@ -25,10 +26,12 @@ type Message = jsonMsg.Message
 var msgCtl *jsonMsg.MsgCtl
 
 func init() {
+	log.Warn("[ctl] msg init start")
 	msgCtl = jsonMsg.NewMsgCtl()
 	for typeByte, msg := range msgTypeMap {
 		msgCtl.RegisterMsg(typeByte, msg)
 	}
+	log.Warn("[ctl] msg init end")
 }
 
 func ReadMsg(c io.Reader) (msg Message, err error) {
