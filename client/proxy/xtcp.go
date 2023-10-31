@@ -122,7 +122,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	pxy.listenByQUIC(listenConn, raddr, startWorkConnMsg)
 	xl.Warn("[proxy xtcp] xtcp listen by quic end LocalAddr=[%v] RemoteAddr=[%v]", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String())
 
-	go udp.ReadFromUDP(listenConn)
+	go udp.ReadFromUDP(pxy.ctx, listenConn)
 
 	xl.Warn("[proxy xtcp] xtcp ReadFromUDP end =[%v]", listenConn == nil)
 

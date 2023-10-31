@@ -15,9 +15,11 @@
 package udp
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/fatedier/frp/pkg/util/log"
+	"github.com/fatedier/frp/pkg/util/xlog"
 	"net"
 	"sync"
 	"time"
@@ -141,36 +143,38 @@ type UDPServer struct {
 	buffer []byte
 }
 
-func ReadFromUDP(conn *net.UDPConn) {
-	log.Warn("[udp ReadFromUDP]start", conn.LocalAddr())
+func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
+	xl := xlog.FromContextSafe(ctx)
+
+	xl.Warn("[udp ReadFromUDP]start", conn.LocalAddr())
 	if conn == nil {
-		log.Error("[udp ReadFromUDP]conn is nil")
+		xl.Error("[udp ReadFromUDP]conn is nil")
 		return
 	}
 	var buffer [1028]byte
 	for {
 		n, addr, err := conn.ReadFromUDP(buffer[:])
 		if err != nil {
-			log.Error("[udp ReadFromUDP]Error reading from UDP connection: %v\n", err)
+			xl.Error("[udp ReadFromUDP]Error reading from UDP connection: %v\n", err)
 			continue
 		}
 		if n == 0 {
 			continue
 		}
 
-		log.Warn("[udp ReadFromUDP] addr=%s, n=%d, err=%v", addr, n)
+		xl.Warn("[udp ReadFromUDP] addr=%s, n=%d, err=%v", addr, n, string(buffer[:n]))
 		var data msg.Message
 		if err := json.Unmarshal(buffer[:n], &data); err != nil {
-			log.Error("Error unmarshaling JSON: %v\n", err)
+			xl.Error("Error unmarshaling JSON: %v\n", err)
 			continue
 		}
 		switch data.(type) {
 		case msg.P2pMessageVisitor:
-			log.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", addr, data)
+			xl.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", addr, data)
 		case msg.P2pMessageProxy:
-			log.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", addr, data)
+			xl.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", addr, data)
 		default:
-			log.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", addr, data)
+			xl.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", addr, data)
 		}
 
 	}
