@@ -151,33 +151,39 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 		xl.Error("[udp ReadFromUDP]conn is nil")
 		return
 	}
-	var buffer [1028]byte
-	for {
-		n, addr, err := conn.ReadFromUDP(buffer[:])
-		if err != nil {
-			xl.Error("[udp ReadFromUDP]Error reading from UDP connection: %v\n", err)
-			continue
-		}
-		if n == 0 {
-			continue
-		}
 
-		xl.Warn("[udp ReadFromUDP] data:%v addr:%v count:%v\n", string(buffer[:n]), addr, n)
+	buf := pool.GetBuf(1500)
+	defer pool.PutBuf(buf)
+	for {
+		n, remoteAddr, err := conn.ReadFromUDP(buf)
+		if err != nil {
+			return
+		}
+		// buf[:n] will be encoded to string, so the bytes can be reused
+		udpMsg := NewUDPPacket(buf[:n], nil, remoteAddr)
+		xl.Warn("[udp ReadFromUDP] udpMsg:%v addr:%v count:%v\n", udpMsg, remoteAddr, n)
+		bufMsg, err := GetContent(udpMsg)
+		if err != nil {
+			continue
+		}
+		xl.Warn("[udp ReadFromUDP] bufMsg:%v addr:%v count:%v\n", bufMsg, remoteAddr, n)
+
 		var data msg.Message
-		if err := json.Unmarshal(buffer[:n], &data); err != nil {
+		if err := json.Unmarshal(bufMsg, &data); err != nil {
 			xl.Error("Error unmarshaling JSON: %v\n", err)
 			continue
 		}
-		switch data.(type) {
+		switch d := data.(type) {
 		case msg.P2pMessageVisitor:
-			xl.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", addr, data)
+			xl.Warn("[udp ReadFromUDP]P2pMessageVisitor Received UDP data from %s: %+v\n", remoteAddr, d)
 		case msg.P2pMessageProxy:
-			xl.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", addr, data)
+			xl.Warn("[udp ReadFromUDP]P2pMessageProxy Received UDP data from %s: %+v\n", remoteAddr, d)
 		default:
-			xl.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", addr, data)
+			xl.Warn("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, d)
 		}
 
 	}
+
 }
 
 func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
