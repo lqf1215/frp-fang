@@ -321,7 +321,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 		return
 	}
 	listenConn = newListenConn
-	xl.Info("[visitor xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s]", natHoleRespMsg.Sid, raddr)
+	xl.Info("[visitor xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s] newListenConn=[%s] [%s]", natHoleRespMsg.Sid, raddr, newListenConn.LocalAddr().String(), newListenConn.RemoteAddr().String())
 
 	if err := sv.session.Init(listenConn, raddr); err != nil {
 		listenConn.Close()
@@ -331,15 +331,16 @@ func (sv *XTCPVisitor) makeNatHole() {
 	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%v] RemoteAddr=[%v]", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String())
 
 	go udp.ReadFromUDP(listenConn)
+	xl.Warn("[visitor xtcp] makeNatHole  udp.ReadFromUDP en=[%v]", listenConn == nil)
 
 	n, err := udp.SendUdpMessage(listenConn, raddr, msg.P2pMessageProxy{
-		Content: "我是proxy hello",
+		Content: "我是visitor hello",
 		Sid:     natHoleRespMsg.Sid,
 	})
 	if err != nil {
-		xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
+		xl.Error("[visitor xtcp] xtcp send udp message error: %v", err)
 	}
-	xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d]", n)
+	xl.Warn("[visitor xtcp] xtcp send udp message success n=[%d]", n)
 
 }
 
@@ -447,10 +448,10 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	qs.session = quicConn
 	qs.listenConn = listenConn
 	qs.mu.Unlock()
-	err = quicConn.SendMessage([]byte("hello woshi visitor xtcp QUICTunnelSession"))
-	if err != nil {
-		log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
-	}
+	//err = quicConn.SendMessage([]byte("hello woshi visitor xtcp QUICTunnelSession"))
+	//if err != nil {
+	//	log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
+	//}
 	return nil
 }
 
