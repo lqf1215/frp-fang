@@ -334,16 +334,16 @@ func (sv *XTCPVisitor) makeNatHole() {
 	}
 	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%+v] ", listenConn)
 
-	//quicListenConn, err := protoQuic.GetQuicListenConn(sv.ctx, listenConn)
-	//
-	//if err != nil {
-	//	xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
-	//}
+	quicListenConn, err := protoQuic.GetQuicListenConn(sv.ctx, listenConn)
+
+	if err != nil {
+		xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
+	}
 	//go udp.ReadFromUDP(sv.ctx, listenConn)
 	//go nathole.WaitDetectMsgMessage(sv.ctx, listenConn, natHoleRespMsg.Sid, []byte(sv.cfg.SecretKey))
 	//xl.Warn("[visitor xtcp]   nathole.WaitDetectMsgMessage end LocalAddr=[%+v] RemoteAddr=[%+v] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
-	//go protoQuic.ReadFromConnListenQuic(sv.ctx, quicListenConn)
-	//xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic en=[%v]", listenConn == nil)
+	go protoQuic.ReadFromConnListenQuic(sv.ctx, quicListenConn)
+	xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic en=[%v]", listenConn == nil)
 	//n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageVisitor{
 	//	Content: "visitorhello",
 	//	Sid:     natHoleRespMsg.Sid,
