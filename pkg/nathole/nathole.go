@@ -367,7 +367,7 @@ func sendSidMessage(
 			}()
 		}
 	}
-	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %s RemoteAddr %s ", conn.LocalAddr().String(), conn.RemoteAddr().String())
+	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %+v ", conn)
 	xl.Warn("[nathole] sendSidMessage send sid message buf %s raddr %s ", buf, raddr)
 	if _, err := conn.WriteToUDP(buf, raddr); err != nil {
 		return err
