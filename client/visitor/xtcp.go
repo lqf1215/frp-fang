@@ -99,6 +99,7 @@ func (sv *XTCPVisitor) worker() {
 			xl.Warn("xtcp local listener closed")
 			return
 		}
+		xl.Warn("[visitor] worker handleConn start RemoteAddr [%v] LocalAddr [%v]", conn.RemoteAddr().String(), conn.LocalAddr().String())
 		go sv.handleConn(conn)
 	}
 }
@@ -180,21 +181,21 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 	}
 	tunnelConn, err := sv.openTunnel(ctx)
 	if err != nil {
-		xl.Error("visitor xtcp] open tunnel error: %v", err)
+		xl.Error("[visitor xtcp]  open tunnel error: %v", err)
 		// no fallback, just return
 		if sv.cfg.FallbackTo == "" {
 			return
 		}
 
-		xl.Error("visitor xtcp] try to transfer connection to visitor: %s", sv.cfg.FallbackTo)
+		xl.Error("[visitor xtcp] try to transfer connection to FallbackTo: [%s]", sv.cfg.FallbackTo)
 		if err := sv.helper.TransferConn(sv.cfg.FallbackTo, userConn); err != nil {
-			xl.Error("transfer connection to visitor %s error: %v", sv.cfg.FallbackTo, err)
+			xl.Error("[visitor xtcp] transfer connection to FallbackTo [%s] error: %v", sv.cfg.FallbackTo, err)
 			return
 		}
 		isConnTrasfered = true
 		return
 	}
-	xl.Warn("[visitor] handleConn tunnelConn cfg=[%+v] tunnelConn=%v  RemoteAddr=%v", sv.cfg, tunnelConn.LocalAddr().String(), tunnelConn.RemoteAddr().String())
+	xl.Warn("[visitor xtcp] handleConn tunnelConn cfg=[%+v] tunnelConn=%v  RemoteAddr=%v", sv.cfg, tunnelConn.LocalAddr().String(), tunnelConn.RemoteAddr().String())
 	var muxConnRWCloser io.ReadWriteCloser = tunnelConn
 	if sv.cfg.Transport.UseEncryption {
 		muxConnRWCloser, err = libio.WithEncryption(muxConnRWCloser, []byte(sv.cfg.SecretKey))
@@ -431,7 +432,7 @@ func NewQUICTunnelSession(clientCfg *v1.ClientCommonConfig) TunnelSession {
 }
 
 func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
-	log.Warn("[visitor xtcp] QUICTunnelSession Init:LocalAddr %v RemoteAddr %v  raddr=%v", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String(), raddr.String())
+	log.Warn("[visitor xtcp] QUICTunnelSession Init listenConn:LocalAddr %v RemoteAddr %v  raddr=%v", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String(), raddr.String())
 	tlsConfig, err := transport.NewClientTLSConfig("", "", "", raddr.String())
 
 	log.Warn("[visitor xtcp] QUICTunnelSession Init: tlsConfig=[%+v] Transport.QUIC=[%+v]", tlsConfig, qs.clientCfg.Transport.QUIC)
@@ -448,7 +449,7 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	if err != nil {
 		return fmt.Errorf("dial quic error: %v", err)
 	}
-	log.Warn("[visitor xtcp] Init session QUICTunnelSession quicConn: %v", quicConn)
+	log.Warn("[visitor xtcp] Init session QUICTunnelSession quicConn: LocalAddr=[%v] RemoteAddr=[%v]", quicConn.LocalAddr().String(), quicConn.RemoteAddr().String())
 	qs.mu.Lock()
 	qs.session = quicConn
 	qs.listenConn = listenConn
