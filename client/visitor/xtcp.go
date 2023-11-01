@@ -473,7 +473,7 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	//if err != nil {
 	//	log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
 	//}
-	err = protoQuic.SendQuicOpenStream(quicConn, msg.P2pMessageVisitor{
+	err = protoQuic.SendQuicOpenStream(quicConn, &msg.P2pMessageVisitor{
 		Content: "hello",
 		Sid:     "world",
 	})

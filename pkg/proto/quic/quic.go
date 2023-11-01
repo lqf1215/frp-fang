@@ -19,7 +19,7 @@ func GetQuicListenConn(ctx context.Context, listenConn *net.UDPConn) (quic.Conne
 		xl.Warn("[GetQuicListen]  create tls config error: %v", err)
 		return nil, err
 	}
-
+	xl.Info("[GetQuicConn]  local=[%v]  RemoteAddr=[%v] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
 	tlsConfig.NextProtos = []string{"frp"}
 	quicListener, err := quic.Listen(listenConn, tlsConfig,
 		&quic.Config{
@@ -83,10 +83,11 @@ func handleStream(stream quic.Stream) {
 	n, err := stream.Read(buf)
 	if err != nil {
 		log.Error("Error reading from stream: %v", err)
+		defer stream.Close()
 		return
 	}
 
-	log.Warn("Received message: %s", string(buf[:n]))
+	log.Warn("[quic handleStream] Received message: %s", string(buf[:n]))
 
 	readMsg, err := msg.ReadMsg(stream)
 	if err != nil {

@@ -17,6 +17,7 @@ package nathole
 import (
 	"context"
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"math/rand"
 	"net"
 	"strconv"
@@ -110,6 +111,7 @@ func PreCheck(
 // Prepare is used to do some preparation work before penetration.
 func Prepare(stunServers []string) (*PrepareResult, error) {
 	// discover for Nat type
+	log.Warn("[nathole] Prepare Discovering NAT type...stunServers=[%v]", stunServers)
 	addrs, localAddr, err := Discover(stunServers, "")
 	if err != nil {
 		return nil, fmt.Errorf("discover error: %v", err)
@@ -184,7 +186,7 @@ func MakeHole(ctx context.Context, listenConn *net.UDPConn, m *msg.NatHoleResp, 
 	sendToRangePortsFunc := func(conn *net.UDPConn, addr string) error {
 		return sendSidMessage(ctx, conn, m.Sid, transactionID, addr, key, m.DetectBehavior.TTL)
 	}
-
+	xl.Warn("[nathole] MakeHole start: [%+v]", m.DetectBehavior)
 	listenConns := []*net.UDPConn{listenConn}
 	var detectAddrs []string
 	if m.DetectBehavior.Role == DetectRoleSender {
@@ -203,6 +205,7 @@ func MakeHole(ctx context.Context, listenConn *net.UDPConn, m *msg.NatHoleResp, 
 		if m.DetectBehavior.ListenRandomPorts > 0 {
 			for i := 0; i < m.DetectBehavior.ListenRandomPorts; i++ {
 				tmpConn, err := net.ListenUDP("udp4", nil)
+				xl.Warn("[MakeHole] listen random udp LocalAddr: [%v] RemoteAddr: [%v] ", tmpConn.LocalAddr(), tmpConn.RemoteAddr())
 				if err != nil {
 					xl.Warn("listen random udp addr error: %v", err)
 					continue
@@ -216,7 +219,7 @@ func MakeHole(ctx context.Context, listenConn *net.UDPConn, m *msg.NatHoleResp, 
 	for _, detectAddr := range detectAddrs {
 		for _, conn := range listenConns {
 			if err := sendSidMessage(ctx, conn, m.Sid, transactionID, detectAddr, key, m.DetectBehavior.TTL); err != nil {
-				xl.Trace("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
+				xl.Error("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
 			}
 		}
 	}
@@ -289,19 +292,20 @@ func waitDetectMessage(
 		if err != nil {
 			return nil, err
 		}
-		xl.Debug("get udp message local %s, from %s", conn.LocalAddr(), raddr)
+		xl.Error("waitDetectMessage get udp message local [%s],RemoteAddr[%v] sid[%v] key[%v] role[%v] from %s", conn.LocalAddr(), conn.RemoteAddr(), sid, string(key), role, raddr)
 		var m msg.NatHoleSid
 		if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
-			xl.Warn("decode sid message error: %v", err)
+			xl.Error("[waitDetectMessage] decode sid message buf=[%v] error: %v", string(buf), err)
 			continue
 		}
 		pool.PutBuf(buf)
+		xl.Info("[waitDetectMessage]====  buf=[%v] m=[%+v]", string(buf[:n]), m)
 
 		if m.Sid != sid {
-			xl.Warn("get sid message with wrong sid: %s, expect: %s", m.Sid, sid)
+			xl.Error("get sid message with wrong sid: %s, expect: %s", m.Sid, sid)
 			continue
 		}
-
+		xl.Info("[waitDetectMessage] m.Sid == sid =%v m.Response=[%v]", sid, m.Response)
 		if !m.Response {
 			// only wait for response messages if we are a sender
 			if role == DetectRoleSender {
@@ -311,7 +315,7 @@ func waitDetectMessage(
 			m.Response = true
 			buf2, err := EncodeMessage(&m, key)
 			if err != nil {
-				xl.Warn("encode sid message error: %v", err)
+				xl.Warn("[waitDetectMessage] EncodeMessage encode sid message error: %v", err)
 				continue
 			}
 			_, _ = conn.WriteToUDP(buf2, raddr)
@@ -329,7 +333,7 @@ func sendSidMessage(
 	if ttl > 0 {
 		ttlStr = fmt.Sprintf(" with ttl %d", ttl)
 	}
-	xl.Trace("send sid message from %s to %s%s", conn.LocalAddr(), addr, ttlStr)
+	xl.Warn("[sendSidMessage] send sid[%v] key=[%v] message from %s to %s%s", sid, string(key), conn.LocalAddr(), addr, ttlStr)
 	raddr, err := net.ResolveUDPAddr("udp4", addr)
 	if err != nil {
 		return err
@@ -342,9 +346,11 @@ func sendSidMessage(
 		Sid:           sid,
 		Response:      false,
 		Nonce:         strings.Repeat("0", rand.Intn(20)),
+		Password:      "nathole-sendSidMessage",
 	}
 	buf, err := EncodeMessage(m, key)
 	if err != nil {
+		xl.Error("[sendSidMessage] encode sid message error: %v", err)
 		return err
 	}
 	if ttl > 0 {
@@ -365,8 +371,16 @@ func sendSidMessage(
 			}()
 		}
 	}
-
+	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %v RemoteAddr %v key=[%v] ", conn.LocalAddr(), conn.RemoteAddr(), string(key))
+	//xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", string(buf), raddr, m)
+	//var m2 msg.Message
+	//err = DecodeMessageInto(buf, key, &m2)
+	//if err != nil {
+	//	xl.Error("[nathole] decode sid message error: %v", err)
+	//}
+	//xl.Warn("[nathole] sendSidMessage send sid message end m2 %v ", m2)
 	if _, err := conn.WriteToUDP(buf, raddr); err != nil {
+		xl.Error("[nathole] sendSidMessage send sid message error: %v", err)
 		return err
 	}
 	return nil
@@ -422,7 +436,7 @@ func sendSidMessageToRandomPorts(
 		for _, ip := range lo.Uniq(parseIPs(addrs)) {
 			detectAddr := net.JoinHostPort(ip, strconv.Itoa(port))
 			if err := sendFunc(conn, detectAddr); err != nil {
-				xl.Trace("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
+				xl.Error("send sid message from %s to %s error: %v", conn.LocalAddr(), detectAddr, err)
 			}
 			time.Sleep(time.Millisecond * 15)
 		}
@@ -437,4 +451,30 @@ func parseIPs(addrs []string) []string {
 		}
 	}
 	return ips
+}
+
+func WaitDetectMsgMessage(
+	ctx context.Context, conn *net.UDPConn, sid string, key []byte,
+) {
+	xl := xlog.FromContextSafe(ctx)
+	for {
+		buf := pool.GetBuf(1024)
+		//_ = conn.SetReadDeadline(time.Now().Add(timeout))
+		n, raddr, err := conn.ReadFromUDP(buf)
+		_ = conn.SetReadDeadline(time.Time{})
+		if err != nil {
+			xl.Error("[waitDetectMsgMessage] get udp message error: %v", err)
+			return
+		}
+		xl.Error("[waitDetectMsgMessage] get udp message local [%s],RemoteAddr[%v] sid[%v] key[%v]  from %s", conn.LocalAddr(), conn.RemoteAddr(), sid, string(key), raddr)
+		var m msg.Message
+		if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
+			xl.Warn("[waitDetectMsgMessage] decode sid message error: %v", err)
+			continue
+		}
+		xl.Info("[waitDetectMsgMessage]  buf=[%v] m=[%+v]", string(buf[:n]), m)
+
+		pool.PutBuf(buf)
+
+	}
 }
