@@ -38,8 +38,8 @@ const (
 	TypeNatHoleResp        = 'm'
 	TypeNatHoleSid         = '5'
 	TypeNatHoleReport      = '6'
-	TypeP2pMessageProxy    = 'z'
-	TypeP2pMessageVisitor  = 'g'
+	TypeP2pMessageProxy    = 'k'
+	TypeP2pMessageVisitor  = 'f'
 	//TypeP2pMessageProxyResp   = '7'
 	//TypeP2pMessageVisitorResp = '8'
 )

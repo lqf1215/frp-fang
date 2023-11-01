@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/fatedier/frp/pkg/proto/udp"
 	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
@@ -34,6 +33,7 @@ import (
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/msg"
 	"github.com/fatedier/frp/pkg/nathole"
+	protoQuic "github.com/fatedier/frp/pkg/proto/quic"
 	"github.com/fatedier/frp/pkg/transport"
 	utilnet "github.com/fatedier/frp/pkg/util/net"
 	"github.com/fatedier/frp/pkg/util/util"
@@ -334,17 +334,23 @@ func (sv *XTCPVisitor) makeNatHole() {
 	}
 	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%+v] ", listenConn)
 
-	go udp.ReadFromUDP(sv.ctx, listenConn)
-	xl.Warn("[visitor xtcp] makeNatHole  udp.ReadFromUDP en=[%v]", listenConn == nil)
+	quicListenConn, err := protoQuic.GetQuicListenConn(sv.ctx, listenConn)
 
-	n, err := udp.SendUdpMessage(listenConn, raddr, msg.P2pMessageProxy{
+	if err != nil {
+		xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
+	}
+	//go udp.ReadFromUDP(sv.ctx, listenConn)
+	go protoQuic.ReadFromConnListenQuic(sv.ctx, quicListenConn)
+	xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic en=[%v]", listenConn == nil)
+
+	err = protoQuic.SendQuicOpenStream(quicListenConn, msg.P2pMessageProxy{
 		Content: "visitorhello",
 		Sid:     natHoleRespMsg.Sid,
 	})
 	if err != nil {
-		xl.Error("[visitor xtcp] xtcp send udp message error: %v", err)
+		xl.Error("[visitor xtcp] xtcp send SendQuicOpenStream message error: %v", err)
 	}
-	xl.Warn("[visitor xtcp] xtcp send udp message success n=[%d]", n)
+	xl.Warn("[visitor xtcp] xtcp send SendQuicOpenStream message success")
 
 }
 
@@ -458,6 +464,14 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	//if err != nil {
 	//	log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
 	//}
+	err = protoQuic.SendQuicOpenStream(quicConn, msg.P2pMessageVisitor{
+		Content: "hello",
+		Sid:     "world",
+	})
+	if err != nil {
+		log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
+	}
+	log.Warn("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage success")
 	return nil
 }
 

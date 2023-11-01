@@ -17,7 +17,6 @@ package udp
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"github.com/fatedier/frp/pkg/nathole"
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/fatedier/frp/pkg/util/xlog"
@@ -152,25 +151,19 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 		buf := make([]byte, 1024)
 		n, remoteAddr, err := conn.ReadFromUDP(buf)
 		if err != nil {
+			xl.Error("[udp ReadFromUDP]ReadFromUDP error: %v", err)
 			return
 		}
 		// buf[:n] will be encoded to string, so the bytes can be reused
 		xl.Info("[udp ReadFromUDP]= buf:%v addr:%v count:%v\n", string(buf[:n]), remoteAddr, n)
 
-		//var m msg.Message
-		msgByte, err := nathole.DecodeBytes(buf[:n], []byte("abcdefg"))
-		if err != nil {
-			xl.Error("decode sid message error: %v", err)
-			continue
-		}
-		xl.Info("[udp ReadFromUDP]Received UDP data from %s: %v\n", remoteAddr, string(msgByte))
-
 		var m2 msg.Message
 		err = nathole.DecodeMessageInto(buf, []byte("abcdefg"), &m2)
 		if err != nil {
 			xl.Error("[ReadFromUDP] decode sid message error: %v", err)
+			continue
 		}
-		xl.Warn("[ReadFromUDP] DecodeMessageInto send sid message end m2 %v ", m2)
+		xl.Warn("[ReadFromUDP] DecodeMessageInto send sid message end m2 [%+v] ", m2)
 		//xl.Info("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, m)
 		//var data msg.Message
 		//if err := json.Unmarshal(buf[:n], &data); err != nil {
@@ -191,23 +184,19 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 }
 
 func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
-	//err := msg.WriteMsg(conn, &message)
-	//if err != nil {
-	//	log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
-	//}
-	marshal, err := json.Marshal(&message)
+	err := msg.WriteMsg(conn, message)
 	if err != nil {
-		return 0, err
+		log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
 	}
 
-	buf, err := nathole.EncodeBytes(marshal, []byte("abcdefg"))
+	buf, err := nathole.EncodeMessage(message, []byte("abcdefg"))
 	n, err := conn.WriteToUDP(buf, raddr)
 
 	if err != nil {
 		return 0, err
 	}
 
-	log.Warn("[udp SendUdpMessage] n=%d, raddr=%v", n, raddr.String())
+	log.Warn("[udp SendUdpMessage] n=%d, raddr=[%v]", n, raddr.String())
 
 	return n, nil
 }

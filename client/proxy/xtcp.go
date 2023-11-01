@@ -15,6 +15,7 @@
 package proxy
 
 import (
+	protoQuic "github.com/fatedier/frp/pkg/proto/quic"
 	"github.com/fatedier/frp/pkg/proto/udp"
 	"io"
 	"net"
@@ -117,7 +118,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 
 	xl.Warn("[proxy xtcp] xtcp ReadFromUDP end =[%v]", listenConn == nil)
 
-	n, err := udp.SendUdpMessage(listenConn, raddr, msg.P2pMessageProxy{
+	n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageProxy{
 		Content: "proxyhello",
 		Sid:     natHoleRespMsg.Sid,
 	})
@@ -215,6 +216,8 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		}
 		xl.Warn("[proxy xtcp] xtcp listen by kcp listenByQUIC start")
 		go pxy.HandleTCPWorkConnection(utilnet.QuicStreamToNetConn(stream, c), startWorkConnMsg, []byte(pxy.cfg.Secretkey))
+
+		go protoQuic.ReadFromQuic(pxy.ctx, stream)
 		xl.Warn("[proxy xtcp] xtcp listen by kcp listenByQUIC end")
 	}
 }
