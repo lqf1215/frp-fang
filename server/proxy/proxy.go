@@ -258,7 +258,7 @@ func (pxy *BaseProxy) handleUserTCPConnection(userConn net.Conn) {
 		})
 	}
 
-	xl.Debug("join connections, workConn(l[%s] r[%s]) userConn(l[%s] r[%s])", workConn.LocalAddr().String(),
+	xl.Warn("[handleUserTCPConnection]join connections, workConn(l[%s] r[%s]) userConn(l[%s] r[%s])", workConn.LocalAddr().String(),
 		workConn.RemoteAddr().String(), userConn.LocalAddr().String(), userConn.RemoteAddr().String())
 
 	name := pxy.GetName()

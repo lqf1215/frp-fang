@@ -291,7 +291,7 @@ func waitDetectMessage(
 		if err != nil {
 			return nil, err
 		}
-		xl.Debug("get udp message local %s, from %s", conn.LocalAddr(), raddr)
+		xl.Error("waitDetectMessage get udp message local [%s],RemoteAddr[%v] sid[%v] key[%v] role[%v] from %s", conn.LocalAddr(), conn.RemoteAddr(), sid, string(key), role, raddr)
 		var m msg.NatHoleSid
 		if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
 			xl.Warn("decode sid message error: %v", err)
@@ -368,9 +368,9 @@ func sendSidMessage(
 		}
 	}
 	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %v RemoteAddr %v ", conn.LocalAddr(), conn.RemoteAddr())
-	xl.Warn("[nathole] sendSidMessage send sid message start buf %s raddr %s 原=[%+v] ", buf, raddr, m)
+	xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", buf, raddr, m)
 	var m2 msg.Message
-	err = DecodeMessageInto(buf, key, m2)
+	err = DecodeMessageInto(buf, key, &m2)
 	if err != nil {
 		xl.Error("[nathole] decode sid message error: %v", err)
 	}

@@ -15,6 +15,7 @@
 package nathole
 
 import (
+	"github.com/fatedier/frp/pkg/util/log"
 	"sync"
 	"time"
 
@@ -175,6 +176,7 @@ type MakeHoleRecords struct {
 }
 
 func NewMakeHoleRecords(c, v *NatFeature) *MakeHoleRecords {
+	log.Warn("NewMakeHoleRecords start ----")
 	scores := []*BehaviorScore{}
 	easyCount, hardCount, portsChangedRegularCount := ClassifyFeatureCount([]*NatFeature{c, v})
 	appendMode0 := func() {
@@ -267,6 +269,7 @@ func NewAnalyzer(dataReserveDuration time.Duration) *Analyzer {
 }
 
 func (a *Analyzer) GetRecommandBehaviors(key string, c, v *NatFeature) (mode, index int, _ RecommandBehavior, _ RecommandBehavior) {
+	log.Warn("GetRecommandBehaviors", "key", key, "c", c, "v", v)
 	a.mu.Lock()
 	records, ok := a.records[key]
 	if !ok {
@@ -277,7 +280,7 @@ func (a *Analyzer) GetRecommandBehaviors(key string, c, v *NatFeature) (mode, in
 
 	mode, index = records.Recommand()
 	cBehavior, vBehavior := getBehaviorByModeAndIndex(mode, index)
-
+	log.Warn("GetRecommandBehaviors  --- ", "mode", mode, "index", index, "v", v)
 	switch mode {
 	case DetectMode1:
 		// HardNAT is always the sender
