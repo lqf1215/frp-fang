@@ -1,6 +1,8 @@
 serverAddr = "121.43.149.18"
 serverPort = 7000
-
+#natHoleStunServer="stun.easyvoip.com:3478"
+#natHoleStunServer="stun.voipstunt.com:3478"
+natHoleStunServer="stun.cheapvoip.com:3478"
 [[visitors]]
 name = "p2p_ssh_visitor"
 type = "xtcp"
