@@ -341,7 +341,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 		xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
 	}
 	//go udp.ReadFromUDP(sv.ctx, listenConn)
-	go nathole.WaitDetectMsgMessage(sv.ctx, listenConn, natHoleRespMsg.Sid, []byte(sv.cfg.SecretKey))
+	//go nathole.WaitDetectMsgMessage(sv.ctx, listenConn, natHoleRespMsg.Sid, []byte(sv.cfg.SecretKey))
 	xl.Warn("[visitor xtcp]   nathole.WaitDetectMsgMessage end LocalAddr=[%+v] RemoteAddr=[%+v] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
 	go protoQuic.ReadFromConnListenQuic(sv.ctx, quicListenConn)
 	xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic en=[%v]", listenConn == nil)

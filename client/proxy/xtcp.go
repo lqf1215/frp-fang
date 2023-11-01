@@ -114,7 +114,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	})
 	xl.Warn("[proxy xtcp] nathole exchange info send msg end sid [%s] success =true protocol=[%v]", natHoleRespMsg.Sid, natHoleRespMsg.Protocol)
 
-	go nathole.WaitDetectMsgMessage(pxy.ctx, listenConn, natHoleRespMsg.Sid, []byte(pxy.cfg.Secretkey))
+	//go nathole.WaitDetectMsgMessage(pxy.ctx, listenConn, natHoleRespMsg.Sid, []byte(pxy.cfg.Secretkey))
 
 	xl.Warn("[proxy xtcp] xtcp WaitDetectMsgMessage end =[%v]", listenConn == nil)
 
