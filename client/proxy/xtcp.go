@@ -139,7 +139,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 
 func (pxy *XTCPProxy) listenByKCP(listenConn *net.UDPConn, raddr *net.UDPAddr, startWorkConnMsg *msg.StartWorkConn) {
 	xl := pxy.xl
-	xl.Warn("[proxy xtcp] xtcp listen by kcp listenByKCP start LocalAddr [%s]", listenConn.LocalAddr().String())
+	xl.Warn("[proxy xtcp] xtcp listen by kcp listenByKCP start LocalAddr [%s]", listenConn.LocalAddr())
 	listenConn.Close()
 	laddr, _ := net.ResolveUDPAddr("udp", listenConn.LocalAddr().String())
 	lConn, err := net.DialUDP("udp", laddr, raddr)

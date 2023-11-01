@@ -99,7 +99,7 @@ func (sv *XTCPVisitor) worker() {
 			xl.Warn("xtcp local listener closed")
 			return
 		}
-		xl.Warn("[visitor] worker handleConn start RemoteAddr [%v] LocalAddr [%v]", conn.RemoteAddr().String(), conn.LocalAddr().String())
+		xl.Warn("[visitor] worker handleConn start RemoteAddr [%v] LocalAddr [%v]", conn.RemoteAddr(), conn.LocalAddr())
 		go sv.handleConn(conn)
 	}
 }
@@ -169,7 +169,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 		}
 	}()
 
-	xl.Error("[visitor xtcp] get a new xtcp user connection userConn=%v - %v", userConn.LocalAddr().String(), userConn.RemoteAddr().String())
+	xl.Error("[visitor xtcp] get a new xtcp user connection userConn=%v - %v", userConn.LocalAddr(), userConn.RemoteAddr())
 
 	// Open a tunnel connection to the server. If there is already a successful hole-punching connection,
 	// it will be reused. Otherwise, it will block and wait for a successful hole-punching connection until timeout.
@@ -195,7 +195,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 		isConnTrasfered = true
 		return
 	}
-	xl.Warn("[visitor xtcp] handleConn tunnelConn cfg=[%+v] tunnelConn=%v  RemoteAddr=%v", sv.cfg, tunnelConn.LocalAddr().String(), tunnelConn.RemoteAddr().String())
+	xl.Warn("[visitor xtcp] handleConn tunnelConn cfg=[%+v] tunnelConn=%v  RemoteAddr=%v", sv.cfg, tunnelConn.LocalAddr(), tunnelConn.RemoteAddr())
 	var muxConnRWCloser io.ReadWriteCloser = tunnelConn
 	if sv.cfg.Transport.UseEncryption {
 		muxConnRWCloser, err = libio.WithEncryption(muxConnRWCloser, []byte(sv.cfg.SecretKey))
@@ -204,7 +204,7 @@ func (sv *XTCPVisitor) handleConn(userConn net.Conn) {
 			return
 		}
 	}
-	xl.Warn("[visitor] handleConn UseEncryption =[%+v] UseCompression=%v  RemoteAddr=%v", sv.cfg.Transport.UseEncryption, sv.cfg.Transport.UseEncryption, tunnelConn.RemoteAddr().String())
+	xl.Warn("[visitor] handleConn UseEncryption =[%+v] UseCompression=%v  RemoteAddr=%v", sv.cfg.Transport.UseEncryption, sv.cfg.Transport.UseEncryption, tunnelConn.RemoteAddr())
 	if sv.cfg.Transport.UseCompression {
 		var recycleFn func()
 		muxConnRWCloser, recycleFn = libio.WithCompressionFromPool(muxConnRWCloser)
@@ -368,7 +368,7 @@ func (ks *KCPTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) er
 	listenConn.Close()
 	laddr, _ := net.ResolveUDPAddr("udp", listenConn.LocalAddr().String())
 	lConn, err := net.DialUDP("udp", laddr, raddr)
-	log.Warn("[visitor xtcp] KCPTunnelSession laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr().String())
+	log.Warn("[visitor xtcp] KCPTunnelSession laddr: %v LocalAddr=%v ", laddr, listenConn.LocalAddr())
 	if err != nil {
 		return fmt.Errorf("dial udp error: %v", err)
 	}
