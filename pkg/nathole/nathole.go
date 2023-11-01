@@ -187,7 +187,7 @@ func MakeHole(ctx context.Context, listenConn *net.UDPConn, m *msg.NatHoleResp, 
 	sendToRangePortsFunc := func(conn *net.UDPConn, addr string) error {
 		return sendSidMessage(ctx, conn, m.Sid, transactionID, addr, key, m.DetectBehavior.TTL)
 	}
-
+	xl.Warn("[nathole] MakeHole start: [%+v]", m.DetectBehavior)
 	listenConns := []*net.UDPConn{listenConn}
 	var detectAddrs []string
 	if m.DetectBehavior.Role == DetectRoleSender {
@@ -206,6 +206,7 @@ func MakeHole(ctx context.Context, listenConn *net.UDPConn, m *msg.NatHoleResp, 
 		if m.DetectBehavior.ListenRandomPorts > 0 {
 			for i := 0; i < m.DetectBehavior.ListenRandomPorts; i++ {
 				tmpConn, err := net.ListenUDP("udp4", nil)
+				xl.Warn("[MakeHole] listen random udp LocalAddr: [%v] RemoteAddr: [%v] ", tmpConn.LocalAddr(), tmpConn.RemoteAddr())
 				if err != nil {
 					xl.Warn("listen random udp addr error: %v", err)
 					continue
@@ -294,17 +295,11 @@ func waitDetectMessage(
 		}
 		xl.Error("waitDetectMessage get udp message local [%s],RemoteAddr[%v] sid[%v] key[%v] role[%v] from %s", conn.LocalAddr(), conn.RemoteAddr(), sid, string(key), role, raddr)
 		var m msg.NatHoleSid
-		//if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
-		//	xl.Warn("[waitDetectMessage] decode sid message error: %v", err)
-		//	continue
-		//}
-		xl.Info("[waitDetectMessage] buf=[%v]", string(buf[:n]))
-
-		err = json.Unmarshal(buf[:n], &m)
-		if err != nil {
+		if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
 			xl.Warn("[waitDetectMessage] decode sid message error: %v", err)
 			continue
 		}
+		xl.Info("[waitDetectMessage] buf=[%v]", string(buf[:n]))
 
 		pool.PutBuf(buf)
 
@@ -356,8 +351,8 @@ func sendSidMessage(
 		Nonce:         strings.Repeat("0", rand.Intn(20)),
 		Password:      "nathole-sendSidMessage",
 	}
-	//buf, err := EncodeMessage(m, key)
-	buf, err := json.Marshal(m)
+	buf, err := EncodeMessage(m, key)
+	//buf, err := json.Marshal(m)
 	if err != nil {
 		xl.Error("[sendSidMessage] encode sid message error: %v", err)
 		return err
