@@ -40,15 +40,6 @@ func GetQuicListenConn(ctx context.Context, listenConn *net.UDPConn) (quic.Conne
 	return c, nil
 }
 
-func ReadFromConnListenQuic(ctx context.Context, quicConn quic.Connection) {
-	xl := xlog.FromContextSafe(ctx)
-	xl.Info("[ReadFromConnListenQuic] for来了")
-	for {
-		go handleSession(ctx, quicConn)
-	}
-
-}
-
 func ReadFromQuic(ctx context.Context, stream quic.Stream) {
 	//xl := xlog.FromContextSafe(ctx)
 	log.Warn("[quic] ReadFromQuic 来了")
@@ -58,20 +49,23 @@ func ReadFromQuic(ctx context.Context, stream quic.Stream) {
 
 }
 
-func handleSession(ctx context.Context, session quic.Connection) {
+func HandleSession(ctx context.Context, session quic.Connection) {
+	xl := xlog.FromContextSafe(ctx)
 	defer func(session quic.Connection, code quic.ApplicationErrorCode, s string) {
 		err := session.CloseWithError(code, s)
 		if err != nil {
-			log.Error("Error closing session: %v", err)
+			xl.Error("Error closing session: %v", err)
+			return
 		}
 	}(session, 0, "")
+	xl.Warn("[quic handleSession] 来了")
 
 	for {
 		stream, err := session.AcceptStream(ctx)
 
 		if err != nil {
-			log.Error("Error accepting stream: %v", err)
-			stream.Close()
+			xl.Error("Error accepting stream: %v", err)
+
 			return
 		}
 		go handleStream(stream)
@@ -96,7 +90,7 @@ func handleStream(stream quic.Stream) {
 		log.Error("read error: %v", err)
 		return
 	}
-	log.Warn("[quic handleStream] read message: %+v", readMsg)
+	log.Warn("[quic handleStream] read message: 【%+v】", readMsg)
 }
 
 func SendQuicOpenStream(session quic.Connection, message msg.Message) error {
