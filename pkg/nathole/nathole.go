@@ -298,6 +298,7 @@ func waitDetectMessage(
 		//	xl.Warn("[waitDetectMessage] decode sid message error: %v", err)
 		//	continue
 		//}
+		xl.Info("[waitDetectMessage] buf=[%v]", string(buf[:n]))
 
 		err = json.Unmarshal(buf[:n], &m)
 		if err != nil {
