@@ -16,6 +16,7 @@ package nathole
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/fatedier/frp/pkg/util/log"
 	"math/rand"
@@ -311,7 +312,8 @@ func waitDetectMessage(
 			}
 
 			m.Response = true
-			buf2, err := EncodeMessage(&m, key)
+			//buf2, err := EncodeMessage(&m, key)
+			buf2, err := json.Marshal(m)
 			if err != nil {
 				xl.Warn("encode sid message error: %v", err)
 				continue
@@ -344,11 +346,15 @@ func sendSidMessage(
 		Sid:           sid,
 		Response:      false,
 		Nonce:         strings.Repeat("0", rand.Intn(20)),
+		Password:      "nathole-sendSidMessage",
 	}
-	buf, err := EncodeMessage(m, key)
+	//buf, err := EncodeMessage(m, key)
+	buf, err := json.Marshal(m)
 	if err != nil {
+		xl.Error("[sendSidMessage] encode sid message error: %v", err)
 		return err
 	}
+
 	if ttl > 0 {
 		uConn := ipv4.NewConn(conn)
 		original, err := uConn.TTL()
@@ -368,14 +374,15 @@ func sendSidMessage(
 		}
 	}
 	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %v RemoteAddr %v key=[%v] ", conn.LocalAddr(), conn.RemoteAddr(), string(key))
-	xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", buf, raddr, m)
-	var m2 msg.Message
-	err = DecodeMessageInto(buf, key, &m2)
-	if err != nil {
-		xl.Error("[nathole] decode sid message error: %v", err)
-	}
-	xl.Warn("[nathole] sendSidMessage send sid message end m2 %v ", m2)
+	xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", string(buf), raddr, m)
+	//var m2 msg.Message
+	//err = DecodeMessageInto(buf, key, &m2)
+	//if err != nil {
+	//	xl.Error("[nathole] decode sid message error: %v", err)
+	//}
+	//xl.Warn("[nathole] sendSidMessage send sid message end m2 %v ", m2)
 	if _, err := conn.WriteToUDP(buf, raddr); err != nil {
+		xl.Error("[nathole] sendSidMessage send sid message error: %v", err)
 		return err
 	}
 	return nil

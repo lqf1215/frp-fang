@@ -236,6 +236,7 @@ type NatHoleSid struct {
 	Sid           string `json:"sid,omitempty"`
 	Response      bool   `json:"response,omitempty"`
 	Nonce         string `json:"nonce,omitempty"`
+	Password      string `json:"password,omitempty"`
 }
 
 type NatHoleReport struct {
