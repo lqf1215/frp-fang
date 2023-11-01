@@ -208,6 +208,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		return
 	}
 	xl.Info("[proxy xtcp] xtcp listenByQUIC for to ")
+
 	for {
 		stream, err := c.AcceptStream(pxy.ctx)
 		if err != nil {
@@ -221,5 +222,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Warn("[proxy xtcp] xtcp listen by kcp ReadFromQuic start")
 		go protoQuic.ReadFromQuic(pxy.ctx, stream)
 		xl.Warn("[proxy xtcp] xtcp listen by kcp ReadFromQuic end")
+
 	}
+
 }

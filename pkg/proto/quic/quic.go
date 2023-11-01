@@ -69,6 +69,7 @@ func HandleSession(ctx context.Context, session quic.Connection) {
 			return
 		}
 		go handleStream(stream)
+
 	}
 
 }
@@ -78,8 +79,8 @@ func handleStream(stream quic.Stream) {
 	buf := make([]byte, 1024)
 	n, err := stream.Read(buf)
 	if err != nil {
+		//TODO 有问题 得处理下
 		log.Error("[quic handleStream]  Error reading from stream: %v", err)
-		defer stream.Close()
 		return
 	}
 
@@ -90,7 +91,16 @@ func handleStream(stream quic.Stream) {
 		log.Error("read error: %v", err)
 		return
 	}
-	log.Warn("[quic handleStream] read message: 【%+v】", readMsg)
+	switch m := readMsg.(type) {
+	case *msg.P2pMessageVisitor:
+		log.Warn("[quic handleStream] P2pMessageVisitor read message: 【%+v】", m)
+
+	case *msg.P2pMessageProxy:
+		log.Warn("[quic handleStream] P2pMessageProxy read message: 【%+v】", m)
+	default:
+		log.Warn("[quic handleStream] default read message: 【%+v】", m)
+
+	}
 }
 
 func SendQuicOpenStream(session quic.Connection, message msg.Message) error {
