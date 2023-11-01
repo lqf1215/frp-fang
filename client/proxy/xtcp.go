@@ -16,7 +16,6 @@ package proxy
 
 import (
 	protoQuic "github.com/fatedier/frp/pkg/proto/quic"
-	"github.com/fatedier/frp/pkg/proto/udp"
 	"io"
 	"net"
 	"reflect"
@@ -116,16 +115,16 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 
 	//go nathole.WaitDetectMsgMessage(pxy.ctx, listenConn, natHoleRespMsg.Sid, []byte(pxy.cfg.Secretkey))
 
-	xl.Warn("[proxy xtcp] xtcp WaitDetectMsgMessage end =[%v]", listenConn == nil)
+	//xl.Warn("[proxy xtcp] xtcp WaitDetectMsgMessage end =[%v]", listenConn == nil)
 
-	n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageProxy{
-		Content: "proxyhello",
-		Sid:     natHoleRespMsg.Sid,
-	})
-	if err != nil {
-		xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
-	}
-	xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d] protocol=%v", n, natHoleRespMsg.Protocol)
+	//n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageProxy{
+	//	Content: "proxyhello",
+	//	Sid:     natHoleRespMsg.Sid,
+	//})
+	//if err != nil {
+	//	xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
+	//}
+	//xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d] protocol=%v", n, natHoleRespMsg.Protocol)
 
 	if natHoleRespMsg.Protocol == "kcp" {
 		pxy.listenByKCP(listenConn, raddr, startWorkConnMsg)

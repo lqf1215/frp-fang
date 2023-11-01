@@ -299,7 +299,7 @@ func waitDetectMessage(
 			xl.Warn("[waitDetectMessage] decode sid message error: %v", err)
 			continue
 		}
-		xl.Info("[waitDetectMessage]  buf=[%v] m=[%+v]", string(buf[:n]), m)
+		xl.Info("[waitDetectMessage]====  buf=[%v] m=[%+v]", string(buf[:n]), m)
 
 		pool.PutBuf(buf)
 
@@ -307,7 +307,7 @@ func waitDetectMessage(
 			xl.Warn("get sid message with wrong sid: %s, expect: %s", m.Sid, sid)
 			continue
 		}
-
+		xl.Info("[waitDetectMessage] m.Sid == sid =%v m.Response=[%v]", sid, m.Response)
 		if !m.Response {
 			// only wait for response messages if we are a sender
 			if role == DetectRoleSender {
@@ -352,12 +352,10 @@ func sendSidMessage(
 		Password:      "nathole-sendSidMessage",
 	}
 	buf, err := EncodeMessage(m, key)
-	//buf, err := json.Marshal(m)
 	if err != nil {
 		xl.Error("[sendSidMessage] encode sid message error: %v", err)
 		return err
 	}
-
 	if ttl > 0 {
 		uConn := ipv4.NewConn(conn)
 		original, err := uConn.TTL()
