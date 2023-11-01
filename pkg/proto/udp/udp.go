@@ -184,10 +184,6 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 }
 
 func SendUdpMessage(conn *net.UDPConn, raddr *net.UDPAddr, message msg.Message) (int, error) {
-	err := msg.WriteMsg(conn, message)
-	if err != nil {
-		log.Error("[udp SendUdpMessage] WriteMsg err=%v", err)
-	}
 
 	buf, err := nathole.EncodeMessage(message, []byte("abcdefg"))
 	n, err := conn.WriteToUDP(buf, raddr)

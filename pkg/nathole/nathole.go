@@ -377,7 +377,7 @@ func sendSidMessage(
 		}
 	}
 	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %v RemoteAddr %v key=[%v] ", conn.LocalAddr(), conn.RemoteAddr(), string(key))
-	xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", string(buf), raddr, m)
+	//xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", string(buf), raddr, m)
 	//var m2 msg.Message
 	//err = DecodeMessageInto(buf, key, &m2)
 	//if err != nil {

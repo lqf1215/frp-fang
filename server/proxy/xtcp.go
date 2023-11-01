@@ -79,6 +79,7 @@ func (pxy *XTCPProxy) Run() (remoteAddr string, err error) {
 				if errRet != nil {
 					xl.Warn("write nat hole sid package error, %v", errRet)
 				}
+				xl.Warn("[server] xtcp proxy [%s] get a new nat hole sid [%s]", pxy.GetName(), sid)
 				workConn.Close()
 			}
 		}

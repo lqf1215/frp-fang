@@ -16,6 +16,7 @@ package visitor
 
 import (
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
 	"sync"
@@ -69,6 +70,7 @@ func (vm *Manager) NewConn(name string, conn net.Conn, timestamp int64, signKey 
 ) (err error) {
 	vm.mu.RLock()
 	defer vm.mu.RUnlock()
+	log.Warn("NewConn: %s LocalAddr[%v] RemoteAddr[%v] signKey[%v] visitorUser[%v]", name, conn.LocalAddr(), conn.RemoteAddr(), signKey, visitorUser)
 
 	if l, ok := vm.listeners[name]; ok {
 		if util.GetAuthKey(l.sk, timestamp) != signKey {

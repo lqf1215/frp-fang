@@ -63,7 +63,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 		return
 	}
 
-	xl.Warn("[proxy xtcp] nathole prepare start NatHoleSTUNServer=[%+v]", pxy.clientCfg.NatHoleSTUNServer)
+	xl.Warn("[proxy xtcp] nathole prepare start NatHoleSTUNServer=[%+v] natHoleSidMsg=[%+v]", pxy.clientCfg.NatHoleSTUNServer, natHoleSidMsg)
 	prepareResult, err := nathole.Prepare([]string{pxy.clientCfg.NatHoleSTUNServer})
 	if err != nil {
 		xl.Warn("[proxy xtcp] nathole prepare error: %v", err)
@@ -131,7 +131,7 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 		pxy.listenByKCP(listenConn, raddr, startWorkConnMsg)
 		return
 	}
-
+	xl.Warn("[proxy xtcp] xtcp listen by quic start LocalAddr=[%+v] ", listenConn)
 	// default is quic
 	pxy.listenByQUIC(listenConn, raddr, startWorkConnMsg)
 	xl.Warn("[proxy xtcp] xtcp listen by quic end LocalAddr=[%+v] ", listenConn)
@@ -207,6 +207,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Error("quic accept connection error: %v", err)
 		return
 	}
+	xl.Info("[proxy xtcp] xtcp listenByQUIC for to LocalAddr [%s] RemoteAddr [%s] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
 	for {
 		stream, err := c.AcceptStream(pxy.ctx)
 		if err != nil {
