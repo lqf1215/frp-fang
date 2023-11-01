@@ -164,6 +164,13 @@ func ReadFromUDP(ctx context.Context, conn *net.UDPConn) {
 			continue
 		}
 		xl.Info("[udp ReadFromUDP]Received UDP data from %s: %v\n", remoteAddr, string(msgByte))
+
+		var m2 msg.Message
+		err = nathole.DecodeMessageInto(buf, []byte("abcdefg"), &m2)
+		if err != nil {
+			xl.Error("[ReadFromUDP] decode sid message error: %v", err)
+		}
+		xl.Warn("[ReadFromUDP] DecodeMessageInto send sid message end m2 %v ", m2)
 		//xl.Info("[udp ReadFromUDP]Received UDP data from %s: %+v\n", remoteAddr, m)
 		//var data msg.Message
 		//if err := json.Unmarshal(buf[:n], &data); err != nil {

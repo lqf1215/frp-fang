@@ -331,7 +331,7 @@ func sendSidMessage(
 	if ttl > 0 {
 		ttlStr = fmt.Sprintf(" with ttl %d", ttl)
 	}
-	xl.Trace("send sid message from %s to %s%s", conn.LocalAddr(), addr, ttlStr)
+	xl.Warn("[sendSidMessage] send sid[%v] key=[%v] message from %s to %s%s", sid, string(key), conn.LocalAddr(), addr, ttlStr)
 	raddr, err := net.ResolveUDPAddr("udp4", addr)
 	if err != nil {
 		return err
@@ -367,7 +367,7 @@ func sendSidMessage(
 			}()
 		}
 	}
-	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %v RemoteAddr %v ", conn.LocalAddr(), conn.RemoteAddr())
+	xl.Info("[nathole] sendSidMessage send sid message LocalAddr %v RemoteAddr %v key=[%v] ", conn.LocalAddr(), conn.RemoteAddr(), string(key))
 	xl.Warn("[nathole] sendSidMessage send sid message start buf [%s] raddr [%s] 原=[%+v] ", buf, raddr, m)
 	var m2 msg.Message
 	err = DecodeMessageInto(buf, key, &m2)
