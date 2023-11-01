@@ -299,7 +299,7 @@ func waitDetectMessage(
 			xl.Warn("[waitDetectMessage] decode sid message error: %v", err)
 			continue
 		}
-		xl.Info("[waitDetectMessage] buf=[%v]", string(buf[:n]))
+		xl.Info("[waitDetectMessage] ReadFromUDP buf=[%v] m=[%+v]", string(buf[:n]), m)
 
 		pool.PutBuf(buf)
 
