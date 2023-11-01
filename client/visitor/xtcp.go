@@ -325,7 +325,6 @@ func (sv *XTCPVisitor) makeNatHole() {
 	listenConn = newListenConn
 	xl.Info("[visitor xtcp] establishing nat hole connection successful, sid [%s], remoteAddr [%s] ", natHoleRespMsg.Sid, raddr)
 	xl.Info("[visitor xtcp] establishing nat hole connection successful,  newListenConn=[%s] [%s]", newListenConn == nil, listenConn == nil)
-
 	if err := sv.session.Init(listenConn, raddr); err != nil {
 
 		listenConn.Close()
@@ -334,16 +333,41 @@ func (sv *XTCPVisitor) makeNatHole() {
 	}
 	xl.Warn("[visitor xtcp] makeNatHole  sv.session.Init end LocalAddr=[%+v] ", listenConn)
 
-	quicListenConn, err := protoQuic.GetQuicListenConn(sv.ctx, listenConn)
-
-	if err != nil {
-		xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
-	}
+	//quicListenConn, err := protoQuic.GetQuicListenConn(sv.ctx, listenConn)
+	//
+	//if err != nil {
+	//	xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
+	//}
 	//go udp.ReadFromUDP(sv.ctx, listenConn)
 	//go nathole.WaitDetectMsgMessage(sv.ctx, listenConn, natHoleRespMsg.Sid, []byte(sv.cfg.SecretKey))
 	//xl.Warn("[visitor xtcp]   nathole.WaitDetectMsgMessage end LocalAddr=[%+v] RemoteAddr=[%+v] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
-	go protoQuic.ReadFromConnListenQuic(sv.ctx, quicListenConn)
-	xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic en=[%v]", listenConn == nil)
+	if quicSession, ok := sv.session.(*QUICTunnelSession); ok {
+		// sv.session is a QUICTunnelSession, you can access the quic.Connection
+		quicConnection := quicSession.session
+		// Now, you can use quicConnection as needed
+		xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic start")
+		go protoQuic.ReadFromConnListenQuic(sv.ctx, quicConnection)
+		xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic end=[%v]")
+
+		err = protoQuic.SendQuicOpenStream(quicConnection, msg.P2pMessageVisitor{
+			Content: "visitorhello",
+			Sid:     natHoleRespMsg.Sid,
+		})
+		if err != nil {
+			xl.Error("[visitor xtcp] xtcp send SendQuicOpenStream message error: %v", err)
+		}
+		xl.Warn("[visitor xtcp] xtcp send SendQuicOpenStream message success ok end")
+
+	} else if kcpSession, ok := sv.session.(*KCPTunnelSession); ok {
+		// sv.session is a KCPTunnelSession, you can access the fmux.Session
+		fmuxSession := kcpSession.session
+		// Now, you can use fmuxSession as needed
+		fmt.Println(fmuxSession)
+	} else {
+		// Handle cases where sv.session is neither a QUICTunnelSession nor a KCPTunnelSession
+		fmt.Println("Unknown session type")
+	}
+
 	//n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageVisitor{
 	//	Content: "visitorhello",
 	//	Sid:     natHoleRespMsg.Sid,
@@ -352,13 +376,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 	//if err != nil {
 	//	xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
 	//}
-	//err = protoQuic.SendQuicOpenStream(quicListenConn, msg.P2pMessageVisitor{
-	//	Content: "visitorhello",
-	//	Sid:     natHoleRespMsg.Sid,
-	//})
-	//if err != nil {
-	//	xl.Error("[visitor xtcp] xtcp send SendQuicOpenStream message error: %v", err)
-	//}
+
 	xl.Warn("[visitor xtcp] xtcp send SendQuicOpenStream message success")
 
 }
