@@ -349,7 +349,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 		go protoQuic.ReadFromConnListenQuic(sv.ctx, quicConnection)
 		xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic end=[%v]")
 
-		err = protoQuic.SendQuicOpenStream(quicConnection, msg.P2pMessageVisitor{
+		err = protoQuic.SendQuicOpenStream(quicConnection, &msg.P2pMessageVisitor{
 			Content: "visitorhello",
 			Sid:     natHoleRespMsg.Sid,
 		})
@@ -492,8 +492,8 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	//	log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)
 	//}
 	err = protoQuic.SendQuicOpenStream(quicConn, &msg.P2pMessageVisitor{
-		Content: "hello",
-		Sid:     "world",
+		Content: "我是QUICTunnelSession的init visitor",
+		Sid:     "hello",
 	})
 	if err != nil {
 		log.Error("[visitor xtcp] Init session QUICTunnelSession quicConn.SendMessage error: %v", err)

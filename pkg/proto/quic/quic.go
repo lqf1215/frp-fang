@@ -68,8 +68,10 @@ func handleSession(ctx context.Context, session quic.Connection) {
 
 	for {
 		stream, err := session.AcceptStream(ctx)
+
 		if err != nil {
 			log.Error("Error accepting stream: %v", err)
+			stream.Close()
 			return
 		}
 		go handleStream(stream)
@@ -82,12 +84,12 @@ func handleStream(stream quic.Stream) {
 	buf := make([]byte, 1024)
 	n, err := stream.Read(buf)
 	if err != nil {
-		log.Error("Error reading from stream: %v", err)
+		log.Error("[quic handleStream]  Error reading from stream: %v", err)
 		defer stream.Close()
 		return
 	}
 
-	log.Warn("[quic handleStream] Received message: %s", string(buf[:n]))
+	log.Warn("[quic handleStream]  Received message: %v", string(buf[:n]))
 
 	readMsg, err := msg.ReadMsg(stream)
 	if err != nil {

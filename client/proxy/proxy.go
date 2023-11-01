@@ -133,7 +133,7 @@ func (pxy *BaseProxy) HandleTCPWorkConnection(workConn net.Conn, m *msg.StartWor
 	}
 
 	xl.Warn("[proxy] handle tcp work connection, use_encryption: %t, use_compression: %t encKey=[%v]",
-		baseCfg.Transport.UseEncryption, baseCfg.Transport.UseCompression, encKey)
+		baseCfg.Transport.UseEncryption, baseCfg.Transport.UseCompression, string(encKey))
 	if baseCfg.Transport.UseEncryption {
 		remote, err = libio.WithEncryption(remote, encKey)
 		if err != nil {
