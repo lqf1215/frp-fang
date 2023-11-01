@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fatedier/frp/pkg/proto/udp"
 	"github.com/fatedier/frp/pkg/util/log"
 	"io"
 	"net"
@@ -340,10 +341,19 @@ func (sv *XTCPVisitor) makeNatHole() {
 		xl.Error("[visitor xtcp] GetQuicListenConn get quic listen conn error: %v", err)
 	}
 	//go udp.ReadFromUDP(sv.ctx, listenConn)
+	go nathole.WaitDetectMsgMessage(sv.ctx, listenConn, natHoleRespMsg.Sid, []byte(sv.cfg.SecretKey))
+	xl.Warn("[visitor xtcp]   nathole.WaitDetectMsgMessage end LocalAddr=[%+v] RemoteAddr=[%+v] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
 	go protoQuic.ReadFromConnListenQuic(sv.ctx, quicListenConn)
 	xl.Warn("[visitor xtcp] makeNatHole  quic.ReadFromConnListenQuic en=[%v]", listenConn == nil)
-
-	err = protoQuic.SendQuicOpenStream(quicListenConn, msg.P2pMessageProxy{
+	n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageVisitor{
+		Content: "visitorhello",
+		Sid:     natHoleRespMsg.Sid,
+	})
+	xl.Warn("[visitor xtcp]   udp.SendUdpMessage  n=[%v]", n)
+	if err != nil {
+		xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
+	}
+	err = protoQuic.SendQuicOpenStream(quicListenConn, msg.P2pMessageVisitor{
 		Content: "visitorhello",
 		Sid:     natHoleRespMsg.Sid,
 	})

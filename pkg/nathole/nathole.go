@@ -299,7 +299,7 @@ func waitDetectMessage(
 			xl.Warn("[waitDetectMessage] decode sid message error: %v", err)
 			continue
 		}
-		xl.Info("[waitDetectMessage] ReadFromUDP buf=[%v] m=[%+v]", string(buf[:n]), m)
+		xl.Info("[waitDetectMessage]  buf=[%v] m=[%+v]", string(buf[:n]), m)
 
 		pool.PutBuf(buf)
 
@@ -456,4 +456,30 @@ func parseIPs(addrs []string) []string {
 		}
 	}
 	return ips
+}
+
+func WaitDetectMsgMessage(
+	ctx context.Context, conn *net.UDPConn, sid string, key []byte,
+) {
+	xl := xlog.FromContextSafe(ctx)
+	for {
+		buf := pool.GetBuf(1024)
+		//_ = conn.SetReadDeadline(time.Now().Add(timeout))
+		n, raddr, err := conn.ReadFromUDP(buf)
+		_ = conn.SetReadDeadline(time.Time{})
+		if err != nil {
+			xl.Error("[waitDetectMsgMessage] get udp message error: %v", err)
+			return
+		}
+		xl.Error("[waitDetectMsgMessage] get udp message local [%s],RemoteAddr[%v] sid[%v] key[%v]  from %s", conn.LocalAddr(), conn.RemoteAddr(), sid, string(key), raddr)
+		var m msg.Message
+		if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
+			xl.Warn("[waitDetectMsgMessage] decode sid message error: %v", err)
+			continue
+		}
+		xl.Info("[waitDetectMsgMessage]  buf=[%v] m=[%+v]", string(buf[:n]), m)
+
+		pool.PutBuf(buf)
+
+	}
 }

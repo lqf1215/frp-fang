@@ -114,18 +114,9 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 	})
 	xl.Warn("[proxy xtcp] nathole exchange info send msg end sid [%s] success =true protocol=[%v]", natHoleRespMsg.Sid, natHoleRespMsg.Protocol)
 
-	if natHoleRespMsg.Protocol == "kcp" {
-		pxy.listenByKCP(listenConn, raddr, startWorkConnMsg)
-		return
-	}
+	go nathole.WaitDetectMsgMessage(pxy.ctx, listenConn, natHoleRespMsg.Sid, []byte(pxy.cfg.Secretkey))
 
-	// default is quic
-	pxy.listenByQUIC(listenConn, raddr, startWorkConnMsg)
-	xl.Warn("[proxy xtcp] xtcp listen by quic end LocalAddr=[%+v] ", listenConn)
-
-	go udp.ReadFromUDP(pxy.ctx, listenConn)
-
-	xl.Warn("[proxy xtcp] xtcp ReadFromUDP end =[%v]", listenConn == nil)
+	xl.Warn("[proxy xtcp] xtcp WaitDetectMsgMessage end =[%v]", listenConn == nil)
 
 	n, err := udp.SendUdpMessage(listenConn, raddr, &msg.P2pMessageProxy{
 		Content: "proxyhello",
@@ -135,6 +126,15 @@ func (pxy *XTCPProxy) InWorkConn(conn net.Conn, startWorkConnMsg *msg.StartWorkC
 		xl.Error("[proxy xtcp] xtcp send udp message error: %v", err)
 	}
 	xl.Warn("[proxy xtcp] xtcp send udp message success n=[%d] protocol=%v", n, natHoleRespMsg.Protocol)
+
+	if natHoleRespMsg.Protocol == "kcp" {
+		pxy.listenByKCP(listenConn, raddr, startWorkConnMsg)
+		return
+	}
+
+	// default is quic
+	pxy.listenByQUIC(listenConn, raddr, startWorkConnMsg)
+	xl.Warn("[proxy xtcp] xtcp listen by quic end LocalAddr=[%+v] ", listenConn)
 
 }
 
