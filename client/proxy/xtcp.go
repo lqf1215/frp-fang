@@ -187,7 +187,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Warn("create tls config error: %v", err)
 		return
 	}
-	xl.Warn("[proxy xtcp] xtcp listen by quic listenByQUIC start LocalAddr [%s] RemoteAddr [%s] ", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String())
+	xl.Warn("[proxy xtcp] xtcp listen by quic listenByQUIC start LocalAddr [%s] RemoteAddr [%s] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
 	tlsConfig.NextProtos = []string{"frp"}
 	quicListener, err := quic.Listen(listenConn, tlsConfig,
 		&quic.Config{
