@@ -196,8 +196,9 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 			KeepAlivePeriod:    time.Duration(pxy.clientCfg.Transport.QUIC.KeepalivePeriod) * time.Second,
 		},
 	)
+	xl.Warn("[proxy xtcp] xtcp listen by quic listenByQUIC quicListener end  [%s]  ", quicListener == nil)
 	if err != nil {
-		xl.Warn("dial quic error: %v", err)
+		xl.Warn("[proxy xtcp] dial quic error: %v", err)
 		return
 	}
 	// only accept one connection from raddr
@@ -206,7 +207,7 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Error("quic accept connection error: %v", err)
 		return
 	}
-	xl.Info("[proxy xtcp] xtcp listenByQUIC for to LocalAddr [%s] RemoteAddr [%s] ", listenConn.LocalAddr(), listenConn.RemoteAddr())
+	xl.Info("[proxy xtcp] xtcp listenByQUIC for to ")
 	for {
 		stream, err := c.AcceptStream(pxy.ctx)
 		if err != nil {
@@ -217,7 +218,8 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		xl.Warn("[proxy xtcp] xtcp listen by kcp listenByQUIC start")
 		go pxy.HandleTCPWorkConnection(utilnet.QuicStreamToNetConn(stream, c), startWorkConnMsg, []byte(pxy.cfg.Secretkey))
 
+		xl.Warn("[proxy xtcp] xtcp listen by kcp ReadFromQuic start")
 		go protoQuic.ReadFromQuic(pxy.ctx, stream)
-		xl.Warn("[proxy xtcp] xtcp listen by kcp listenByQUIC end")
+		xl.Warn("[proxy xtcp] xtcp listen by kcp ReadFromQuic end")
 	}
 }

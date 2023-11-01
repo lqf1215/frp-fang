@@ -296,15 +296,14 @@ func waitDetectMessage(
 		xl.Error("waitDetectMessage get udp message local [%s],RemoteAddr[%v] sid[%v] key[%v] role[%v] from %s", conn.LocalAddr(), conn.RemoteAddr(), sid, string(key), role, raddr)
 		var m msg.NatHoleSid
 		if err := DecodeMessageInto(buf[:n], key, &m); err != nil {
-			xl.Warn("[waitDetectMessage] decode sid message buf=[%v] error: %v", string(buf[:n]), err)
+			xl.Error("[waitDetectMessage] decode sid message buf=[%v] error: %v", string(buf), err)
 			continue
 		}
+		pool.PutBuf(buf)
 		xl.Info("[waitDetectMessage]====  buf=[%v] m=[%+v]", string(buf[:n]), m)
 
-		pool.PutBuf(buf)
-
 		if m.Sid != sid {
-			xl.Warn("get sid message with wrong sid: %s, expect: %s", m.Sid, sid)
+			xl.Error("get sid message with wrong sid: %s, expect: %s", m.Sid, sid)
 			continue
 		}
 		xl.Info("[waitDetectMessage] m.Sid == sid =%v m.Response=[%v]", sid, m.Response)
