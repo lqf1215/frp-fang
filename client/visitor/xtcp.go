@@ -432,7 +432,7 @@ func NewQUICTunnelSession(clientCfg *v1.ClientCommonConfig) TunnelSession {
 }
 
 func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) error {
-	log.Warn("[visitor xtcp] QUICTunnelSession Init listenConn:LocalAddr %v RemoteAddr %v  raddr=%v", listenConn.LocalAddr().String(), listenConn.RemoteAddr().String(), raddr.String())
+	log.Warn("[visitor xtcp] QUICTunnelSession Init listenConn:LocalAddr %v RemoteAddr %v  raddr=%v", listenConn.LocalAddr(), listenConn.RemoteAddr(), raddr.String())
 	tlsConfig, err := transport.NewClientTLSConfig("", "", "", raddr.String())
 
 	log.Warn("[visitor xtcp] QUICTunnelSession Init: tlsConfig=[%+v] Transport.QUIC=[%+v]", tlsConfig, qs.clientCfg.Transport.QUIC)
@@ -449,7 +449,7 @@ func (qs *QUICTunnelSession) Init(listenConn *net.UDPConn, raddr *net.UDPAddr) e
 	if err != nil {
 		return fmt.Errorf("dial quic error: %v", err)
 	}
-	log.Warn("[visitor xtcp] Init session QUICTunnelSession quicConn: LocalAddr=[%v] RemoteAddr=[%v]", quicConn.LocalAddr().String(), quicConn.RemoteAddr().String())
+	log.Warn("[visitor xtcp] Init session QUICTunnelSession quicConn: LocalAddr=[%v] RemoteAddr=[%v]", quicConn.LocalAddr(), quicConn.RemoteAddr())
 	qs.mu.Lock()
 	qs.session = quicConn
 	qs.listenConn = listenConn
