@@ -112,6 +112,7 @@ type ProxyBaseConfig struct {
 	LoadBalancer LoadBalancerConfig `json:"loadBalancer,omitempty"`
 	HealthCheck  HealthCheckConfig  `json:"healthCheck,omitempty"`
 	ProxyBackend
+	Password string `json:"password,omitempty"`
 }
 
 func (c *ProxyBaseConfig) GetBaseConfig() *ProxyBaseConfig {

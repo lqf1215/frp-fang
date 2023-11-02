@@ -5,8 +5,9 @@ serverPort = 7000
 #natHoleStunServer="stun.cheapvoip.com:3478"
 
 [[proxies]]
-name = "p2p_ssh"
+name = "p2p_ssh_1"
 type = "xtcp"
-secretKey = "abcdefg"
+secretKey = "abcdefg1"
 localIP = "127.0.0.1"
 localPort = 22
+password = "ssh1"

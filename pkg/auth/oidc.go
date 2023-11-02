@@ -17,6 +17,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/samber/lo"
@@ -113,6 +114,7 @@ func NewOidcAuthVerifier(additionalAuthScopes []v1.AuthScope, cfg v1.AuthOIDCSer
 
 func (auth *OidcAuthConsumer) VerifyLogin(loginMsg *msg.Login) (err error) {
 	token, err := auth.verifier.Verify(context.Background(), loginMsg.PrivilegeKey)
+	log.Warn("[token] VerifyLogin token=[%+v]", token)
 	if err != nil {
 		return fmt.Errorf("invalid OIDC token in login: %v", err)
 	}

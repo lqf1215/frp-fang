@@ -16,6 +16,7 @@ package auth
 
 import (
 	"fmt"
+	"github.com/fatedier/frp/pkg/util/log"
 	"time"
 
 	"github.com/samber/lo"
@@ -39,6 +40,7 @@ func NewTokenAuth(additionalAuthScopes []v1.AuthScope, token string) *TokenAuthS
 
 func (auth *TokenAuthSetterVerifier) SetLogin(loginMsg *msg.Login) error {
 	loginMsg.PrivilegeKey = util.GetAuthKey(auth.token, loginMsg.Timestamp)
+	log.Warn("[token] SetLogin PrivilegeKey: %s token=[%v]", loginMsg.PrivilegeKey, auth.token)
 	return nil
 }
 

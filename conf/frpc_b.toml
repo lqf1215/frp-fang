@@ -4,7 +4,7 @@ serverPort = 7000
 #natHoleStunServer="stun.voipstunt.com:3478"
 #natHoleStunServer="stun.cheapvoip.com:3478"
 [[visitors]]
-name = "p2p_ssh_visitor"
+name = "p2p_ssh_visitor_1"
 type = "xtcp"
 serverName = "p2p_ssh"
 secretKey = "abcdefg"
@@ -17,3 +17,4 @@ keep_tunnel_open = false
 # max_retries_an_hour = 8
 # 重试打开隧道的最小间隔时间，单位: 秒
 # min_retry_interval = 90
+password = "ssh1"
