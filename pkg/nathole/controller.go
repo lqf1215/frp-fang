@@ -161,7 +161,7 @@ func (c *Controller) HandleVisitor(m *msg.NatHoleVisitor, transporter transport.
 			return
 		}
 		_ = transporter.Send(c.GenNatHoleResponse(m.TransactionID, nil, ""))
-		fmt.Sprintf("[server control] HandleVisitor send TransactionID: %s cfg.allowUsers=%v visitorUser=%v", m.TransactionID, cfg.allowUsers, visitorUser)
+		log.Warn("[server control] HandleVisitor send TransactionID: %s cfg.allowUsers=%v visitorUser=%v", m.TransactionID, cfg.allowUsers, visitorUser)
 		return
 	}
 
@@ -258,7 +258,7 @@ func (c *Controller) HandleClient(m *msg.NatHoleClient, transporter transport.Me
 	if !ok {
 		return
 	}
-	log.Trace("handle client message, sid [%s], server name: %s", session.sid, m.ProxyName)
+	log.Warn("handle client message, sid [%s], server name: %s", session.sid, m.ProxyName)
 	session.clientMsg = m
 	session.clientTransporter = transporter
 	select {

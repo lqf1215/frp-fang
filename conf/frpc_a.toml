@@ -3,11 +3,17 @@ serverPort = 7000
 #natHoleStunServer="stun.easyvoip.com:3478"
 #natHoleStunServer="stun.voipstunt.com:3478"
 #natHoleStunServer="stun.cheapvoip.com:3478"
-
+#验证客户端与服务端之间的通信，并确保只有授权用户能够建立连接
+#需要在 frp 的客户端 frpc 和服务端 frps 配置文件中配置相同的 token 即可
+auth.token = "abc"
 [[proxies]]
 name = "p2p_ssh_1"
 type = "xtcp"
 secretKey = "abcdefg1"
 localIP = "127.0.0.1"
 localPort = 22
-password = "ssh1"
+#将 frpc 与 frps 之间的通信内容加密传输，将会有效防止传输内容被截取
+#transport.useEncryption = true
+#对传输内容进行压缩，可以有效减小 frpc 与 frps 之间的网络流量，加快流量转发速度，但是会额外消耗一些 CPU 资源
+#transport.useCompression = true
+

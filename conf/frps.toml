@@ -1,1 +1,7 @@
 bindPort = 7000
+
+# kcp 绑定的是 UDP 端口，可以和 bindPort 一样 相比于 TCP，在弱网环境下传输效率提升明显，但是会有一些额外的流量消耗
+#kcpBindPort = 7000
+
+# QUIC 绑定的是 UDP 端口，可以和 bindPort 一样 底层采用 UDP 传输，解决了 TCP 上的一些问题，传输效率更高，连接延迟低
+#quicBindPort = 7000

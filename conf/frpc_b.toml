@@ -3,11 +3,14 @@ serverPort = 7000
 #natHoleStunServer="stun.easyvoip.com:3478"
 #natHoleStunServer="stun.voipstunt.com:3478"
 #natHoleStunServer="stun.cheapvoip.com:3478"
+#验证客户端与服务端之间的通信，并确保只有授权用户能够建立连接
+#需要在 frp 的客户端 frpc 和服务端 frps 配置文件中配置相同的 token 即可
+auth.token = "abc"
 [[visitors]]
-name = "p2p_ssh_visitor_1"
+name = "p2p_ssh_visitor"
 type = "xtcp"
-serverName = "p2p_ssh"
-secretKey = "abcdefg"
+serverName = "p2p_ssh_1"
+secretKey = "abcdefg1"
 bindAddr = "127.0.0.1"
 bindPort = 6000
 # when automatic tunnel persistence is required, set it to true
@@ -17,4 +20,3 @@ keep_tunnel_open = false
 # max_retries_an_hour = 8
 # 重试打开隧道的最小间隔时间，单位: 秒
 # min_retry_interval = 90
-password = "ssh1"
