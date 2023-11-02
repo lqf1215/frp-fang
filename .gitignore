@@ -24,7 +24,7 @@ _testmain.go
 *.prof
 
 # Self
-bin/
+
 packages/
 release/
 test/bin/
