@@ -344,19 +344,28 @@ func (sv *XTCPVisitor) makeNatHole() {
 	if quicSession, ok := sv.session.(*QUICTunnelSession); ok {
 		// sv.session is a QUICTunnelSession, you can access the quic.Connection
 		quicConnection := quicSession.session
-
+		err = protoQuic.SendQuicOpenStream(quicConnection, &msg.P2pMessageVisitor{
+			Content: "visitor-hello-1111",
+			Sid:     natHoleRespMsg.Sid,
+		})
 		// Now, you can use quicConnection as needed
 		xl.Warn("[visitor xtcp] makeNatHole  quic.HandleSession start")
 		go protoQuic.HandleSession(sv.ctx, quicConnection)
 		xl.Warn("[visitor xtcp] makeNatHole  quic.HandleSession end=[%v]")
 
 		err = protoQuic.SendQuicOpenStream(quicConnection, &msg.P2pMessageVisitor{
-			Content: "visitorhello",
+			Content: "visitor-hello-2222",
 			Sid:     natHoleRespMsg.Sid,
 		})
 		if err != nil {
 			xl.Error("[visitor xtcp] xtcp send SendQuicOpenStream message error: %v", err)
 		}
+
+		time.Sleep(10 * time.Second)
+		err = protoQuic.SendQuicOpenStream(quicConnection, &msg.P2pMessageVisitor{
+			Content: "visitor-hello-4444",
+			Sid:     natHoleRespMsg.Sid,
+		})
 		xl.Warn("[visitor xtcp] xtcp send SendQuicOpenStream message success ok end")
 
 	} else if kcpSession, ok := sv.session.(*KCPTunnelSession); ok {

@@ -209,8 +209,13 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 	}
 	xl.Info("[proxy xtcp] xtcp listenByQUIC for to ")
 	err = protoQuic.SendQuicOpenStream(c, &msg.P2pMessageVisitor{
-		Content: "我是listenByQUIC proxy",
-		Sid:     "hello",
+		Content: "我是listenByQUIC proxy1111",
+		Sid:     "hello 111",
+	})
+
+	err = protoQuic.SendQuicOpenStream(c, &msg.P2pMessageVisitor{
+		Content: "我是listenByQUIC proxy2222",
+		Sid:     "hello 222",
 	})
 	if err != nil {
 		xl.Error("[proxy xtcp] quic send open stream message error: %v", err)
@@ -229,6 +234,10 @@ func (pxy *XTCPProxy) listenByQUIC(listenConn *net.UDPConn, _ *net.UDPAddr, star
 		go protoQuic.HandleStream(stream)
 		xl.Warn("[proxy xtcp] xtcp listen by kcp HandleStream end")
 
+		protoQuic.SendQuicOpenStream(c, &msg.P2pMessageVisitor{
+			Content: "我是listenByQUIC proxy3333",
+			Sid:     "hello 333",
+		})
 	}
 
 }
