@@ -20,3 +20,14 @@ keep_tunnel_open = false
 # max_retries_an_hour = 8
 # 重试打开隧道的最小间隔时间，单位: 秒
 # min_retry_interval = 90
+
+#可以通过配置 fallback 到 stcp visitor 实现在打洞失败时，回退到 stcp 建立连接。
+#fallbackTo = "stcp-visitor"
+#fallbackTimeoutMs = 200
+
+#[[visitors]]
+#name = "stcp-visitor"
+#type = "stcp"
+#serverName = "stcp-test"
+#secretKey = "abcdefg2"
+#bindPort = -1
