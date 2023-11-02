@@ -344,6 +344,7 @@ func (sv *XTCPVisitor) makeNatHole() {
 	if quicSession, ok := sv.session.(*QUICTunnelSession); ok {
 		// sv.session is a QUICTunnelSession, you can access the quic.Connection
 		quicConnection := quicSession.session
+
 		// Now, you can use quicConnection as needed
 		xl.Warn("[visitor xtcp] makeNatHole  quic.HandleSession start")
 		go protoQuic.HandleSession(sv.ctx, quicConnection)

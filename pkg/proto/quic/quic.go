@@ -7,6 +7,7 @@ import (
 	"github.com/fatedier/frp/pkg/util/log"
 	"github.com/fatedier/frp/pkg/util/xlog"
 	"github.com/quic-go/quic-go"
+	"io"
 	"net"
 	"time"
 )
@@ -44,7 +45,7 @@ func ReadFromQuic(ctx context.Context, stream quic.Stream) {
 	//xl := xlog.FromContextSafe(ctx)
 	log.Warn("[quic] ReadFromQuic 来了")
 	for {
-		go handleStream(stream)
+		go HandleStream(stream)
 	}
 
 }
@@ -68,19 +69,24 @@ func HandleSession(ctx context.Context, session quic.Connection) {
 
 			return
 		}
-		go handleStream(stream)
+		go HandleStream(stream)
 
 	}
 
 }
 
-func handleStream(stream quic.Stream) {
+func HandleStream(stream quic.Stream) {
+	log.Warn("[quic handleStream] 来了")
 	defer stream.Close()
 	buf := make([]byte, 1024)
 	n, err := stream.Read(buf)
 	if err != nil {
-		//TODO 有问题 得处理下
-		log.Error("[quic handleStream]  Error reading from stream: %v", err)
+		if err == io.EOF {
+			// 流已关闭
+			log.Warn("[quic handleStream] Stream closed.")
+		} else {
+			log.Error("[quic handleStream] Error reading from stream: %v", err)
+		}
 		return
 	}
 
