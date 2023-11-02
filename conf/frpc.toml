@@ -3,7 +3,7 @@ serverPort = 7000
 
 #验证客户端与服务端之间的通信，并确保只有授权用户能够建立连接
 #需要在 frp 的客户端 frpc 和服务端 frps 配置文件中配置相同的 token 即可
-auth.token = "abc"
+#auth.token = "abc"
 
 [[proxies]]
 name = "test-tcp"

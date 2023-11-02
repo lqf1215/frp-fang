@@ -1,0 +1,25 @@
+serverAddr = "121.43.149.18"
+serverPort = 7000
+#natHoleStunServer="stun.easyvoip.com:3478"
+#natHoleStunServer="stun.voipstunt.com:3478"
+#natHoleStunServer="stun.cheapvoip.com:3478"
+
+[[proxies]]
+name = "p2p_ssh_2"
+type = "xtcp"
+secretKey = "abcdefg2"
+localIP = "127.0.0.1"
+localPort = 22
+
+#[[proxies]]
+#name = "stcp-test"
+# If the type is secret tcp, remotePort is useless
+# Who want to connect local port should deploy another frpc with stcp proxy and role is visitor
+#type = "stcp"
+# secretKey is used for authentication for visitors
+#secretKey = "abcdefg2"
+#localIP = "127.0.0.1"
+#localPort = 23
+# If not empty, only visitors from specified users can connect.
+# Otherwise, visitors from same user can connect. '*' means allow all users.
+#allowUsers = ["*"]
